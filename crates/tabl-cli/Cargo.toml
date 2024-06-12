@@ -1,0 +1,20 @@
+[package]
+name = "tabl-cli"
+description = "cli for reading and modifying tabular files"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "tabl"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4.8", features = ["derive"] }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+tabl = { version = "0.1.0", path = "../tabl" }
+term_size = "0.3.2"
+toolstr = "0.1.5"
