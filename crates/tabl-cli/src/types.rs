@@ -18,4 +18,8 @@ pub(crate) enum TablCliError {
     /// Error wrapper for standard IO errors.
     #[error(transparent)]
     StripPrefix(#[from] std::path::StripPrefixError),
+
+    /// Error wrapper for toolstr errors.
+    #[error(transparent)]
+    ToolstrError(#[from] toolstr::FormatError),
 }

@@ -17,4 +17,7 @@ pub mod parquet;
 /// types
 pub mod types;
 
+/// formats
+pub mod formats;
+
 pub use types::*;

@@ -14,4 +14,12 @@ pub enum TablError {
     /// Error wrapper for parquet errors.
     #[error(transparent)]
     ParquetError(#[from] parquet::errors::ParquetError),
+
+    /// Error wrapper for tokio errors.
+    #[error(transparent)]
+    TokioJoinError(#[from] tokio::task::JoinError),
+
+    /// Error wrapper for input errors.
+    #[error("Input error: {0}")]
+    InputError(String),
 }

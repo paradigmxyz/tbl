@@ -1,5 +1,5 @@
 use crate::TablError;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 /// return tabular file paths within directory
 pub fn get_directory_tabular_files(dir_path: &Path) -> Result<Vec<PathBuf>, TablError> {
@@ -45,3 +45,28 @@ pub fn is_tabular_file(file_path: &std::path::Path) -> bool {
         false
     }
 }
+
+/// get common prefix of paths
+pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TablError> {
+    if paths.is_empty() {
+        return Err(TablError::InputError("no paths given".to_string()));
+    }
+
+    let mut components_iter = paths.iter().map(|p| p.components());
+    let mut common_components: Vec<Component<'_>> = components_iter
+        .next()
+        .expect("There should be at least one path")
+        .collect();
+
+    for components in components_iter {
+        common_components = common_components
+            .iter()
+            .zip(components)
+            .take_while(|(a, b)| a == &b)
+            .map(|(a, _)| *a)
+            .collect();
+    }
+
+    Ok(common_components.iter().collect())
+}
+

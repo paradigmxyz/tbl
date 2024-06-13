@@ -6,7 +6,7 @@ use std::path::PathBuf;
 pub(crate) async fn run_cli() -> Result<(), TablCliError> {
     match Cli::parse().command {
         Commands::Ls(args) => ls_command(args).await,
-        Commands::Schema(args) => schema_command(args),
+        Commands::Schema(args) => schema_command(args).await,
         Commands::Stats(args) => stats_command(args),
         Commands::Cast(args) => cast_command(args),
         Commands::Drop(args) => drop_command(args),
@@ -90,6 +90,22 @@ pub(crate) struct SchemaArgs {
     /// input path(s) to use
     #[clap(short, long)]
     pub(crate) inputs: Option<Vec<PathBuf>>,
+
+    /// recursively list all files in tree
+    #[clap(long)]
+    pub(crate) tree: bool,
+
+    /// show absolute paths instead of relative
+    #[clap(long)]
+    pub(crate) absolute: bool,
+
+    /// print top n schemas
+    #[clap(long)]
+    pub(crate) n_schemas: Option<usize>,
+
+    /// print example paths of each schema
+    #[clap(long)]
+    pub(crate) include_example_paths: bool,
 }
 
 /// Arguments for the `stats` subcommand
@@ -98,6 +114,10 @@ pub(crate) struct StatsArgs {
     /// input path(s) to use
     #[clap(short, long)]
     pub(crate) inputs: Option<Vec<PathBuf>>,
+
+    /// recursively list all files in tree
+    #[clap(long)]
+    pub(crate) tree: bool,
 }
 
 //

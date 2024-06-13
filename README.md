@@ -10,21 +10,21 @@ CLI utility for reading and editing parquet files
 ## Commands
 
 #### Reading commands
-`tabl stats <FILES> [--per-column]` show per-column stats
+- `tabl ls` ls files with row counts, page counts
+- `tabl schema [<FILES>]` print schema of files
+- `tabl stats <FILES> [--per-column]` show per-column stats
     - stats: type, size, null count, min, max
-`tabl ls` ls files with row counts, page counts
-`tabl schema [<FILES>]` print schema of files
 
 ### Editing commands
-`tabl drop <COLUMNS> <FILE>` delete columns
-    `tabl drop col1 file1`
-    `tabl drop --columns col1 --inputs file1`
-`tabl cast <COLUMNS>` cast columns into new types
-    `tabl cast label=String`
-`tabl merge <FILES>` merge files into one file
-`tabl partition` partition files
-`tabl pl <POLARS_EXPRESSION>` edit using python polars expression syntax
-    `tabl pl df.group_by('name').agg(pl.first('date'))`
+- `tabl drop <COLUMNS> <FILE>` delete columns
+    - `tabl drop col1 file1`
+    - `tabl drop --columns col1 --inputs file1`
+- `tabl cast <COLUMNS>` cast columns into new types
+    - `tabl cast label=String`
+- `tabl merge <FILES>` merge files into one file
+- `tabl partition` partition files
+- `tabl pl <POLARS_EXPRESSION>` edit using python polars expression syntax
+    - `tabl pl df.group_by('name').agg(pl.first('date'))`
 
 ### Editing command options
 - `--confirm` perform edits without confirmation
