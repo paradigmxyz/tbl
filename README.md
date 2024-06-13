@@ -45,5 +45,6 @@ CLI utility for reading and editing parquet files
 
 # Maybe TODO
 - allow opening editor to create polars expressions
+- allow opening editor to sql or passing sql expressions
 - allow reading from s3
 

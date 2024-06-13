@@ -17,7 +17,7 @@ pub async fn get_parquet_row_count(path: &std::path::Path) -> Result<u64, TablEr
 pub async fn get_parquet_row_counts(paths: &[&std::path::Path]) -> Result<Vec<u64>, TablError> {
     let row_counts = stream::iter(paths)
         .map(|path| get_parquet_row_count(path))
-        .buffer_unordered(10)
+        .buffered(10)
         .collect::<Vec<Result<u64, TablError>>>()
         .await;
 
@@ -44,7 +44,7 @@ pub async fn get_parquet_schemas(
 ) -> Result<Vec<Arc<Schema>>, TablError> {
     let schemas = stream::iter(paths)
         .map(|path| get_parquet_schema(path))
-        .buffer_unordered(10)
+        .buffered(10)
         .collect::<Vec<Result<Arc<Schema>, TablError>>>()
         .await;
 
@@ -56,25 +56,36 @@ pub async fn get_parquet_schemas(
 /// TabularFileSummaryOptions
 #[derive(Default)]
 pub struct TabularFileSummaryOptions {
-    n_bytes: bool,
-    n_rows: bool,
-    schema: bool,
-    columns: bool,
+    /// n_bytes
+    pub n_bytes: bool,
+    /// n_rows
+    pub n_rows: bool,
+    /// schema
+    pub schema: bool,
+    /// columns
+    pub columns: bool,
 }
 
 /// TabularFileSummary
 pub struct TabularFileSummary {
-    n_bytes: Option<u64>,
-    n_rows: Option<u64>,
-    schema: Option<Arc<Schema>>,
-    columns: Option<TabularColumnSummary>,
+    /// n_bytes
+    pub n_bytes: Option<u64>,
+    /// n_rows
+    pub n_rows: Option<u64>,
+    /// schema
+    pub schema: Option<Arc<Schema>>,
+    /// columns
+    pub columns: Option<TabularColumnSummary>,
 }
 
 /// TabularColumnSummary
 pub struct TabularColumnSummary {
-    n_bytes: Option<u64>,
-    n_null: Option<u64>,
-    n_unique: Option<u64>,
+    /// n_bytes
+    pub n_bytes: Option<u64>,
+    /// n_null
+    pub n_null: Option<u64>,
+    /// n_unique
+    pub n_unique: Option<u64>,
     // min_value
     // max_value
 }
@@ -121,7 +132,7 @@ pub async fn get_parquet_summaries(
 ) -> Result<Vec<TabularFileSummary>, TablError> {
     let schemas = stream::iter(paths)
         .map(|path| get_parquet_summary(path, &options))
-        .buffer_unordered(10)
+        .buffered(10)
         .collect::<Vec<Result<TabularFileSummary, TablError>>>()
         .await;
 
@@ -129,4 +140,3 @@ pub async fn get_parquet_summaries(
         .into_iter()
         .collect::<Result<Vec<TabularFileSummary>, TablError>>()
 }
-

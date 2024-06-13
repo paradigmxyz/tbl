@@ -22,4 +22,8 @@ pub(crate) enum TablCliError {
     /// Error wrapper for toolstr errors.
     #[error(transparent)]
     ToolstrError(#[from] toolstr::FormatError),
+
+    /// Error caused by missing schema
+    #[error("Argument error: {0}")]
+    MissingSchemaError(String),
 }

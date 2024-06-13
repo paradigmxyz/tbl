@@ -1,4 +1,3 @@
-
 /// format bytes
 pub fn format_bytes(bytes: u64) -> String {
     let units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];

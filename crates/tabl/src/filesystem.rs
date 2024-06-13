@@ -69,4 +69,3 @@ pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TablError> {
 
     Ok(common_components.iter().collect())
 }
-

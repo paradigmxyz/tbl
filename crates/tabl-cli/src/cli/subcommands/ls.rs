@@ -56,10 +56,8 @@ pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
     }
 
     // get row counts
-    let path_refs: Vec<&std::path::Path> = paths
-        .iter()
-        .map(|path_buf| path_buf.as_path())
-        .collect();
+    let path_refs: Vec<&std::path::Path> =
+        paths.iter().map(|path_buf| path_buf.as_path()).collect();
     let row_counts = tabl::parquet::get_parquet_row_counts(&path_refs).await?;
 
     // print total summary
