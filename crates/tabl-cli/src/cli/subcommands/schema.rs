@@ -1,30 +1,21 @@
 use crate::{SchemaArgs, TablCliError};
 use polars::prelude::*;
 use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
+use tabl::formats::{format_bytes, format_with_commas};
+use tabl::parquet::{combine_tabular_summaries, summarize_by_schema, TabularSummary};
 use toolstr::Colorize;
 
 pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError> {
     // get schemas
     let paths = crate::get_file_paths(args.inputs, args.tree)?;
-    let n_paths = paths.len() as u64;
-    let options = tabl::parquet::TabularFileSummaryOptions {
-        n_bytes: true,
-        n_rows: true,
-        schema: true,
-        ..Default::default()
-    };
-    let summaries = tabl::parquet::get_parquet_summaries(&paths, options).await?;
-    let schemas: Vec<&Arc<Schema>> = summaries
-        .iter()
-        .map(|summary| {
-            summary
-                .schema
-                .as_ref()
-                .ok_or(TablCliError::MissingSchemaError("h".to_string()))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let unique_schemas = count_unique_schemas(&schemas);
-    let n_schemas = unique_schemas.len();
+    let summaries = tabl::parquet::get_parquet_summaries(&paths).await?;
+    let ref_summaries: Vec<&tabl::parquet::TabularSummary> = summaries.iter().collect();
+    let by_schema = summarize_by_schema(ref_summaries.as_slice())?;
+
+    // summarize entire set
+    let total_summary = combine_tabular_summaries(&ref_summaries, false)?;
 
     // clear common prefix
     let paths = if args.absolute {
@@ -38,139 +29,45 @@ pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError>
         new_paths
     };
 
-    // decide how many schemas to show
-    let n = args.n_schemas.unwrap_or(3);
-    let n = std::cmp::min(n, unique_schemas.len());
-
     // collect example paths for each schema
     let n_example_paths = 3;
-    let mut example_paths = HashMap::<std::sync::Arc<Schema>, Vec<std::path::PathBuf>>::new();
-    if args.include_example_paths {
-        for (path, schema) in paths.iter().zip(schemas.iter()) {
+    let example_paths = if args.include_example_paths {
+        let mut example_paths = HashMap::<Arc<Schema>, Vec<PathBuf>>::new();
+        for (path, summary) in paths.iter().zip(summaries.iter()) {
             example_paths
-                .entry(Arc::clone(schema))
+                .entry(Arc::clone(&summary.schema))
                 .or_default()
                 .push(path.clone());
         }
-    }
+        Some(example_paths)
+    } else {
+        None
+    };
 
-    // summarize n_rows and n_bytes for each schema
-    let mut bytes_per_schema = HashMap::<std::sync::Arc<Schema>, u64>::new();
-    let mut rows_per_schema = HashMap::<std::sync::Arc<Schema>, u64>::new();
-    for (schema, summary) in schemas.iter().zip(summaries.iter()) {
-        if let Some(n_bytes) = summary.n_bytes {
-            *bytes_per_schema.entry(Arc::clone(schema)).or_default() += n_bytes;
+    // decide how many schemas to show
+    let n_to_show = std::cmp::min(args.n_schemas.unwrap_or(3), by_schema.len());
+
+    // decide what to sort by
+    let sort_by = match args.sort.as_str() {
+        "rows" => SortSchemasBy::Rows,
+        "bytes" => SortSchemasBy::Bytes,
+        "files" => SortSchemasBy::Files,
+        _ => {
+            return Err(TablCliError::Arg(
+                "must sort by rows, bytes, or files".to_string(),
+            ))
         }
-        if let Some(n_rows) = summary.n_rows {
-            *rows_per_schema.entry(Arc::clone(schema)).or_default() += n_rows;
-        }
-    }
+    };
 
-    let n_total_bytes: u64 = summaries.iter().filter_map(|summary| summary.n_bytes).sum();
-    let n_total_rows: u64 = summaries.iter().filter_map(|summary| summary.n_rows).sum();
-
-    // print summary
-    let schema_word = if n_schemas == 1 { "schema" } else { "schemas" };
-    println!(
-        "{} unique {} for {} rows and {} files in {}",
-        tabl::formats::format_with_commas(unique_schemas.len() as u64)
-            .green()
-            .bold(),
-        schema_word,
-        tabl::formats::format_with_commas(n_total_rows as u64)
-            .green()
-            .bold(),
-        tabl::formats::format_with_commas(n_paths).green().bold(),
-        tabl::formats::format_bytes(n_total_bytes).green().bold(),
-    );
-    println!();
-    if n_schemas > 1 {
-        println!(
-            "showing top {} schemas below",
-            format!("{}", n).green().bold(),
-        );
-        println!();
-        if args.include_example_paths {
-            println!();
-        };
-    }
-
-    // print top schemas
-    let format = toolstr::NumberFormat::new().percentage().precision(2);
-    let sort_by = SortSchemasBy::Bytes;
-    let top_n = top_n_schemas(
-        unique_schemas,
-        &bytes_per_schema,
-        &rows_per_schema,
-        n,
+    // print output
+    print_schemas(
+        by_schema,
+        total_summary,
+        n_to_show,
         sort_by,
-    );
-    for (i, (schema, n_occurrences)) in top_n.into_iter().enumerate() {
-        let file_percent = (n_occurrences as f64) / (n_paths as f64);
-        let file_percent = format.format(file_percent)?;
-
-        let n_schema_rows = *rows_per_schema.get(&schema).unwrap_or(&0);
-        let row_percent = if n_total_rows == 0 {
-            0.0
-        } else {
-            (n_schema_rows as f64) / (n_total_rows as f64)
-        };
-        let row_percent = format.format(row_percent)?;
-
-        let n_schema_bytes = *bytes_per_schema.get(&schema).unwrap_or(&0);
-        let byte_percent = if n_total_bytes == 0 {
-            0.0
-        } else {
-            (n_schema_bytes as f64) / (n_total_bytes as f64)
-        };
-        let byte_percent = format.format(byte_percent)?;
-
-        if n_schemas > 1 {
-            println!(
-                "Schema {}: {} rows ({}) across {} files ({}) using {} ({})",
-                format!("{}", i + 1).green().bold(),
-                tabl::formats::format_with_commas(n_schema_rows)
-                    .green()
-                    .bold(),
-                row_percent.green().bold(),
-                tabl::formats::format_with_commas(n_occurrences as u64)
-                    .green()
-                    .bold(),
-                file_percent.green().bold(),
-                tabl::formats::format_bytes(n_schema_bytes).green().bold(),
-                byte_percent.green().bold(),
-            );
-        }
-        print_schema(schema.clone())?;
-
-        if args.include_example_paths {
-            println!();
-            if n_example_paths == 1 {
-                println!("Example path:");
-            } else {
-                println!("Example paths:");
-            };
-            if let Some(paths_vec) = example_paths.get(&schema) {
-                for (i, path) in paths_vec.iter().take(n_example_paths).enumerate() {
-                    println!("    {}. {}", i + 1, path.to_string_lossy());
-                }
-            }
-        }
-
-        if i < n - 1 {
-            println!();
-            if args.include_example_paths {
-                println!();
-            }
-        }
-    }
-    if n < n_schemas {
-        println!();
-        println!(
-            "{} more schemas not shown",
-            format!("{}", n_schemas - n).bold().green()
-        )
-    }
+        n_example_paths,
+        example_paths,
+    )?;
 
     Ok(())
 }
@@ -186,44 +83,181 @@ fn count_unique_schemas(schemas: &Vec<&Arc<Schema>>) -> HashMap<Arc<Schema>, usi
     schema_counts
 }
 
-enum SortSchemasBy {
+pub(crate) enum SortSchemasBy {
     Files,
     Bytes,
     Rows,
 }
 
-fn top_n_schemas(
-    schema_counts: HashMap<Arc<Schema>, usize>,
-    _bytes_per_schema: &HashMap<std::sync::Arc<Schema>, u64>,
-    _rows_per_schema: &HashMap<std::sync::Arc<Schema>, u64>,
-    n: usize,
-    _sort_by: SortSchemasBy,
-) -> Vec<(Arc<Schema>, usize)> {
-    let mut counts_vec: Vec<(Arc<Schema>, usize)> = schema_counts.into_iter().collect();
-    counts_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    counts_vec.into_iter().take(n).collect()
+impl std::fmt::Display for SortSchemasBy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            SortSchemasBy::Files => "files",
+            SortSchemasBy::Bytes => "bytes",
+            SortSchemasBy::Rows => "rows",
+        };
+        write!(f, "{}", s)
+    }
 }
 
-fn print_schema(schema: std::sync::Arc<Schema>) -> Result<(), TablCliError> {
-    // build data
+fn top_n_schemas(
+    schema_summaries: HashMap<Arc<Schema>, TabularSummary>,
+    n_to_show: usize,
+    sort_by: SortSchemasBy,
+) -> Vec<TabularSummary> {
+    let mut summaries: Vec<_> = schema_summaries.values().cloned().collect();
+    match sort_by {
+        SortSchemasBy::Rows => summaries.sort_by(|a, b| b.n_rows.cmp(&a.n_rows)),
+        SortSchemasBy::Files => summaries.sort_by(|a, b| b.n_files.cmp(&a.n_files)),
+        SortSchemasBy::Bytes => {
+            summaries.sort_by(|a, b| b.n_bytes_compressed.cmp(&a.n_bytes_compressed))
+        }
+    }
+    summaries.into_iter().take(n_to_show).collect()
+}
+
+fn print_schemas(
+    schema_summaries: HashMap<Arc<Schema>, TabularSummary>,
+    total_summary: TabularSummary,
+    n_to_show: usize,
+    sort_by: SortSchemasBy,
+    n_example_paths: usize,
+    example_paths: Option<HashMap<Arc<Schema>, Vec<PathBuf>>>,
+) -> Result<(), TablCliError> {
+    let n_schemas = schema_summaries.len();
+
+    // print summary
+    let schema_word = if n_schemas == 1 { "schema" } else { "schemas" };
+    println!(
+        "{} unique {}, {} rows, {} files, {}",
+        format_with_commas(n_schemas as u64).green().bold(),
+        schema_word,
+        format_with_commas(total_summary.n_rows).green().bold(),
+        format_with_commas(total_summary.n_files).green().bold(),
+        format_bytes(total_summary.n_bytes_compressed)
+            .green()
+            .bold(),
+    );
+    println!();
+    if n_schemas > 1 {
+        println!(
+            "showing top {} schemas by number of {}:",
+            format!("{}", n_to_show).green().bold(),
+            sort_by,
+        );
+        println!();
+        if example_paths.is_some() {
+            println!();
+        };
+    }
+
+    // print top schemas
+    let format = toolstr::NumberFormat::new().percentage().precision(2);
+    let top_n = top_n_schemas(schema_summaries, n_to_show, sort_by);
+    for (i, summary) in top_n.into_iter().enumerate() {
+        let file_percent = (summary.n_files as f64) / (total_summary.n_files as f64);
+        let file_percent = format.format(file_percent)?;
+
+        let row_percent = if total_summary.n_rows == 0 {
+            0.0
+        } else {
+            (summary.n_rows as f64) / (total_summary.n_rows as f64)
+        };
+        let row_percent = format.format(row_percent)?;
+
+        let byte_percent = if total_summary.n_bytes_compressed == 0 {
+            0.0
+        } else {
+            (summary.n_bytes_compressed as f64) / (total_summary.n_bytes_compressed as f64)
+        };
+        let byte_percent = format.format(byte_percent)?;
+
+        if n_schemas > 1 {
+            println!(
+                "Schema {}: {} rows ({}), {} files ({}), {} ({})",
+                format!("{}", i + 1).green().bold(),
+                format_with_commas(summary.n_rows).green().bold(),
+                row_percent.green().bold(),
+                format_with_commas(summary.n_files).green().bold(),
+                file_percent.green().bold(),
+                format_bytes(summary.n_bytes_compressed).green().bold(),
+                byte_percent.green().bold(),
+            );
+        }
+        print_schema(summary.schema.clone(), &summary)?;
+
+        if let Some(example_paths) = example_paths.as_ref() {
+            println!();
+            if let Some(paths_vec) = example_paths.get(&summary.schema) {
+                if n_example_paths == 1 {
+                    println!("Example path:");
+                } else {
+                    println!("Example paths:");
+                };
+                for (i, path) in paths_vec.iter().take(n_example_paths).enumerate() {
+                    println!("    {}. {}", i + 1, path.to_string_lossy());
+                }
+            }
+        }
+
+        if i < n_to_show - 1 {
+            println!();
+            if example_paths.is_some() {
+                println!();
+            }
+        }
+    }
+    if n_to_show < n_schemas {
+        println!();
+        println!(
+            "{} more schemas not shown",
+            format!("{}", n_schemas - n_to_show).bold().green()
+        )
+    }
+
+    Ok(())
+}
+
+fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), TablCliError> {
+    // gather data
     let names: Vec<String> = schema.iter_names().map(|x| x.to_string()).collect();
     let dtypes: Vec<String> = schema.iter_dtypes().map(|x| x.to_string()).collect();
+    let uncompressed: Vec<_> = summary
+        .columns
+        .iter()
+        .map(|x| format_bytes(x.n_bytes_uncompressed))
+        .collect();
+    let compressed: Vec<_> = summary
+        .columns
+        .iter()
+        .map(|x| format_bytes(x.n_bytes_compressed))
+        .collect();
+
+    // build table
     let mut table = toolstr::Table::new();
     table.add_column("column name", names)?;
     table.add_column("dtype", dtypes)?;
+    table.add_column("uncompressed", uncompressed)?;
+    table.add_column("compressed", compressed)?;
 
     // create format
     let mut name_column = toolstr::ColumnFormatShorthand::default().name("column name");
     let mut dtype_column = toolstr::ColumnFormatShorthand::default().name("dtype");
+    let mut uncompressed_column = toolstr::ColumnFormatShorthand::default().name("uncompressed");
+    let mut compressed_column = toolstr::ColumnFormatShorthand::default().name("compressed");
     name_column.font_style = Some("".blue().into());
     dtype_column.font_style = Some("".yellow().into());
+    uncompressed_column.font_style = Some("".yellow().into());
+    compressed_column.font_style = Some("".yellow().into());
     let mut format = toolstr::TableFormat {
-        indent: 4,
+        // indent: 4,
         label_font_style: Some("".purple().bold().into()),
         ..Default::default()
     };
     format.add_column(name_column);
     format.add_column(dtype_column);
+    format.add_column(compressed_column);
+    format.add_column(uncompressed_column);
 
     // print table
     format.print(table)?;

@@ -106,6 +106,10 @@ pub(crate) struct SchemaArgs {
     /// print example paths of each schema
     #[clap(long)]
     pub(crate) include_example_paths: bool,
+
+    /// sort schemas by row count, file count, or byte count
+    #[clap(long, default_value = "bytes")]
+    pub(crate) sort: String,
 }
 
 /// Arguments for the `stats` subcommand

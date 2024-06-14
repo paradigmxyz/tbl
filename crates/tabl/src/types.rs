@@ -19,6 +19,10 @@ pub enum TablError {
     #[error(transparent)]
     TokioJoinError(#[from] tokio::task::JoinError),
 
+    /// Error wrapper for schema errors.
+    #[error("Schema error: {0}")]
+    SchemaError(String),
+
     /// Error wrapper for input errors.
     #[error("Input error: {0}")]
     InputError(String),
