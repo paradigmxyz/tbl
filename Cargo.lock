@@ -2669,6 +2669,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "toolstr",
+ "toolstr_colored",
 ]
 
 [[package]]

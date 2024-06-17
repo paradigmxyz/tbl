@@ -9,6 +9,7 @@
 ))]
 
 mod cli;
+pub(crate) mod styles;
 mod types;
 
 pub(crate) use cli::*;

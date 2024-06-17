@@ -1,3 +1,4 @@
+use crate::styles::FontStyle;
 use crate::{SchemaArgs, TablCliError};
 use polars::prelude::*;
 use std::collections::HashMap;
@@ -174,8 +175,10 @@ fn print_schemas(
 
         if n_schemas > 1 {
             println!(
-                "Schema {}: {} rows ({}), {} files ({}), {} ({})",
+                "{} {}{} {} rows ({}), {} files ({}), {} ({})",
+                "Schema".colorize_title(),
                 format!("{}", i + 1).green().bold(),
+                ":".colorize_title(),
                 format_with_commas(summary.n_rows).green().bold(),
                 row_percent.green().bold(),
                 format_with_commas(summary.n_files).green().bold(),
@@ -183,19 +186,24 @@ fn print_schemas(
                 format_bytes(summary.n_bytes_compressed).green().bold(),
                 byte_percent.green().bold(),
             );
+            println!();
         }
         print_schema(summary.schema.clone(), &summary)?;
 
+        println!();
         if let Some(example_paths) = example_paths.as_ref() {
-            println!();
             if let Some(paths_vec) = example_paths.get(&summary.schema) {
                 if n_example_paths == 1 {
-                    println!("Example path:");
+                    println!("{}", "Example path".colorize_title());
                 } else {
-                    println!("Example paths:");
+                    println!("{}", "Example paths".colorize_title());
                 };
                 for (i, path) in paths_vec.iter().take(n_example_paths).enumerate() {
-                    println!("    {}. {}", i + 1, path.to_string_lossy());
+                    println!(
+                        "{} {}",
+                        format!("{}.", i + 1).colorize_variable(),
+                        path.to_string_lossy().colorize_comment()
+                    );
                 }
             }
         }
@@ -237,21 +245,22 @@ fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), Tab
     let mut table = toolstr::Table::new();
     table.add_column("column name", names)?;
     table.add_column("dtype", dtypes)?;
-    table.add_column("uncompressed", uncompressed)?;
-    table.add_column("compressed", compressed)?;
+    table.add_column("full size", uncompressed)?;
+    table.add_column("disk size", compressed)?;
 
     // create format
     let mut name_column = toolstr::ColumnFormatShorthand::default().name("column name");
     let mut dtype_column = toolstr::ColumnFormatShorthand::default().name("dtype");
-    let mut uncompressed_column = toolstr::ColumnFormatShorthand::default().name("uncompressed");
-    let mut compressed_column = toolstr::ColumnFormatShorthand::default().name("compressed");
-    name_column.font_style = Some("".blue().into());
-    dtype_column.font_style = Some("".yellow().into());
-    uncompressed_column.font_style = Some("".yellow().into());
-    compressed_column.font_style = Some("".yellow().into());
+    let mut uncompressed_column = toolstr::ColumnFormatShorthand::default().name("full size");
+    let mut compressed_column = toolstr::ColumnFormatShorthand::default().name("disk size");
+    name_column.font_style = Some("".colorize_function().into());
+    dtype_column.font_style = Some("".colorize_variable().into());
+    uncompressed_column.font_style = Some("".colorize_constant().into());
+    compressed_column.font_style = Some("".colorize_constant().into());
     let mut format = toolstr::TableFormat {
         // indent: 4,
-        label_font_style: Some("".purple().bold().into()),
+        label_font_style: Some("".colorize_title().into()),
+        border_font_style: Some("".colorize_comment().into()),
         ..Default::default()
     };
     format.add_column(name_column);
