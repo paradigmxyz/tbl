@@ -8,8 +8,12 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
+arrow = "52.0.0"
 futures = "0.3.30"
 parquet = { version = "52.0.0", features = ["async"] }
 polars = { version = "0.40.0", features = ["lazy", "parquet"] }
 thiserror = { workspace = true }
 tokio = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10.1"

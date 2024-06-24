@@ -7,9 +7,8 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
     match Cli::parse().command {
         Commands::Ls(args) => ls_command(args).await,
         Commands::Schema(args) => schema_command(args).await,
-        Commands::Stats(args) => stats_command(args),
         Commands::Cast(args) => cast_command(args),
-        Commands::Drop(args) => drop_command(args),
+        Commands::Drop(args) => drop_command(args).await,
         Commands::Merge(args) => merge_command(args),
         Commands::Partition(args) => partition_command(args),
         Commands::Pl(args) => pl_command(args),
@@ -35,8 +34,6 @@ pub(crate) enum Commands {
     Ls(LsArgs),
     /// Show schema of tabular files
     Schema(SchemaArgs),
-    /// Show stats of tabular files
-    Stats(StatsArgs),
     //
     // // edit commands
     //
@@ -131,9 +128,37 @@ pub(crate) struct StatsArgs {
 /// Arguments for the `drop` subcommand
 #[derive(Parser)]
 pub(crate) struct DropArgs {
+    /// columns to drop
+    #[clap()]
+    pub(crate) columns: Vec<String>,
+
     /// input path(s) to use
     #[clap(short, long)]
     pub(crate) inputs: Option<Vec<PathBuf>>,
+
+    /// recursively list all files in tree
+    #[clap(long)]
+    pub(crate) tree: bool,
+
+    /// confirm that files should be edited
+    #[clap(long)]
+    pub(crate) confirm: bool,
+
+    /// prefix to add to output filenames
+    #[clap(long)]
+    pub(crate) output_prefix: Option<String>,
+
+    /// postfix to add to output filenames
+    #[clap(long)]
+    pub(crate) output_postfix: Option<String>,
+
+    /// output directory to write modified files
+    #[clap(long)]
+    pub(crate) output_dir: Option<PathBuf>,
+
+    /// show output paths
+    #[clap(long)]
+    pub(crate) show_output_paths: bool,
 }
 
 /// Arguments for the `cast` subcommand
