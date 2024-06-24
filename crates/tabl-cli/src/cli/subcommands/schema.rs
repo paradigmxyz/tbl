@@ -10,7 +10,7 @@ use toolstr::Colorize;
 
 pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError> {
     // get schemas
-    let paths = crate::get_file_paths(args.inputs, args.tree)?;
+    let paths = tabl::filesystem::get_input_paths(args.inputs, args.tree)?;
     let summaries = tabl::parquet::get_parquet_summaries(&paths).await?;
     let ref_summaries: Vec<&tabl::parquet::TabularSummary> = summaries.iter().collect();
     let by_schema = summarize_by_schema(ref_summaries.as_slice())?;
@@ -241,22 +241,33 @@ fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), Tab
         .map(|x| format_bytes(x.n_bytes_compressed))
         .collect();
 
+    let total_disk_bytes: u64 = summary.columns.iter().map(|x| x.n_bytes_compressed).sum();
+    let percent_disk: Vec<_> = summary
+        .columns
+        .iter()
+        .map(|x| format!("{:.2}%", 100.0 * (x.n_bytes_compressed as f64) / (total_disk_bytes as f64)))
+        .collect();
+
     // build table
     let mut table = toolstr::Table::new();
     table.add_column("column name", names)?;
     table.add_column("dtype", dtypes)?;
     table.add_column("full size", uncompressed)?;
     table.add_column("disk size", compressed)?;
+    table.add_column("disk %", percent_disk)?;
 
     // create format
     let mut name_column = toolstr::ColumnFormatShorthand::default().name("column name");
     let mut dtype_column = toolstr::ColumnFormatShorthand::default().name("dtype");
     let mut uncompressed_column = toolstr::ColumnFormatShorthand::default().name("full size");
     let mut compressed_column = toolstr::ColumnFormatShorthand::default().name("disk size");
+    let mut disk_percent_column = toolstr::ColumnFormatShorthand::default().name("disk %");
     name_column.font_style = Some("".colorize_function().into());
     dtype_column.font_style = Some("".colorize_variable().into());
     uncompressed_column.font_style = Some("".colorize_constant().into());
     compressed_column.font_style = Some("".colorize_constant().into());
+    disk_percent_column.font_style = Some("".colorize_constant().into());
+
     let mut format = toolstr::TableFormat {
         // indent: 4,
         label_font_style: Some("".colorize_title().into()),
@@ -267,6 +278,7 @@ fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), Tab
     format.add_column(dtype_column);
     format.add_column(compressed_column);
     format.add_column(uncompressed_column);
+    format.add_column(disk_percent_column);
 
     // print table
     format.print(table)?;

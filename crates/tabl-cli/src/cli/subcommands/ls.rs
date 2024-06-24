@@ -3,7 +3,7 @@ use toolstr::Colorize;
 
 pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
     // get paths
-    let paths = crate::get_file_paths(args.inputs, args.tree)?;
+    let paths = tabl::filesystem::get_input_paths(args.inputs, args.tree)?;
 
     // clear common prefix
     let paths = if args.absolute {
