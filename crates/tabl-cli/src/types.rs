@@ -26,4 +26,8 @@ pub(crate) enum TablCliError {
     /// Error caused by missing schema
     #[error("Argument error: {0}")]
     MissingSchemaError(String),
+
+    /// General Error
+    #[error("Input error: {0}")]
+    Error(String),
 }

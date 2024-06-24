@@ -19,6 +19,10 @@ pub enum TablError {
     #[error(transparent)]
     TokioJoinError(#[from] tokio::task::JoinError),
 
+    /// Error wrapper for tokio errors.
+    #[error(transparent)]
+    StripPrefixError(#[from] std::path::StripPrefixError),
+
     /// Error wrapper for schema errors.
     #[error("Schema error: {0}")]
     SchemaError(String),
@@ -26,4 +30,8 @@ pub enum TablError {
     /// Error wrapper for input errors.
     #[error("Input error: {0}")]
     InputError(String),
+
+    /// General Error
+    #[error("Input error: {0}")]
+    Error(String),
 }
