@@ -139,6 +139,8 @@ pub struct OutputPathSpec {
     pub file_prefix: Option<String>,
     /// file_postfix
     pub file_postfix: Option<String>,
+    /// sort
+    pub sort: bool,
 }
 
 impl OutputPathSpec {
@@ -186,6 +188,12 @@ impl OutputPathSpec {
         T: Into<Option<String>>,
     {
         self.file_postfix = file_postfix.into();
+        self
+    }
+
+    /// set sort
+    pub fn sort(mut self, sort: bool) -> Self {
+        self.sort = sort;
         self
     }
 }
@@ -392,6 +400,22 @@ pub fn get_output_paths(
             return Err(TablError::Error("".to_string()));
         };
     }
+
+    let (return_inputs, return_outputs) = if output_spec.sort {
+        // Create a vector of paired inputs and outputs
+        let mut paired = return_inputs
+            .into_iter()
+            .zip(return_outputs)
+            .collect::<Vec<_>>();
+
+        // Sort the paired vector based on the output paths
+        paired.sort_by(|a, b| a.1.cmp(&b.1));
+
+        // Unzip the sorted paired vector back into separate input and output vectors
+        paired.into_iter().unzip()
+    } else {
+        (return_inputs, return_outputs)
+    };
 
     // check that all output paths are unique to avoid collisions
     let mut count_per_output: HashMap<PathBuf, usize> = HashMap::new();
