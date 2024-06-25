@@ -12,6 +12,7 @@ name = "tabl"
 path = "src/main.rs"
 
 [dependencies]
+arrow = { workspace = true }
 clap = { version = "4.4.8", features = ["derive"] }
 tokio = { workspace = true }
 thiserror = { workspace = true }

@@ -1,6 +1,6 @@
-use std::path::PathBuf;
-use std::collections::HashMap;
 use polars::prelude::*;
+use std::collections::HashMap;
+use std::path::PathBuf;
 // use arrow::datatypes::Schema as ArrowSchema;
 // use arrow::record_batch::RecordBatch;
 // use parquet::arrow::arrow_writer::ArrowWriter;

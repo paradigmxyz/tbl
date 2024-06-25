@@ -13,3 +13,7 @@ pub use parquet_cast::*;
 /// parquet merge functions
 pub mod parquet_merge;
 pub use parquet_merge::*;
+
+/// parquet insert functions
+pub mod parquet_insert;
+pub use parquet_insert::*;

@@ -7,8 +7,9 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
     match Cli::parse().command {
         Commands::Ls(args) => ls_command(args).await,
         Commands::Schema(args) => schema_command(args).await,
-        Commands::Cast(args) => cast_command(args),
+        Commands::Insert(args) => insert_command(args).await,
         Commands::Drop(args) => drop_command(args).await,
+        Commands::Cast(args) => cast_command(args),
         Commands::Merge(args) => merge_command(args).await,
         Commands::Partition(args) => partition_command(args),
         Commands::Pl(args) => pl_command(args),
@@ -37,10 +38,12 @@ pub(crate) enum Commands {
     //
     // // edit commands
     //
-    /// Cast columns of tabular files
-    Cast(CastArgs),
+    /// Insert columns into tabular files
+    Insert(InsertArgs),
     /// Drop columns from tabular files
     Drop(DropArgs),
+    /// Cast columns of tabular files
+    Cast(CastArgs),
     /// Merge tabular files
     Merge(MergeArgs),
     /// Partition tabular files
@@ -109,16 +112,42 @@ pub(crate) struct SchemaArgs {
     pub(crate) sort: String,
 }
 
-/// Arguments for the `stats` subcommand
 #[derive(Parser)]
-pub(crate) struct StatsArgs {
+pub(crate) struct InsertArgs {
+    /// column specifications, in pairs of COLUMN_NAME DTYPE
+    pub(crate) new_columns: Vec<String>,
+
     /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
+    pub(crate) inputs: Option<Vec<String>>,
 
     /// recursively list all files in tree
     #[clap(long)]
     pub(crate) tree: bool,
+
+    /// output directory to write modified files
+    #[clap(long)]
+    pub(crate) output_dir: Option<PathBuf>,
+
+    /// index of inserted column(s)
+    #[clap(long)]
+    pub(crate) index: Option<Vec<usize>>,
+
+    /// default value(s) of inserted column(s)
+    #[clap(long)]
+    pub(crate) default: Option<Vec<String>>,
+
+    /// confirm that files should be edited
+    #[clap(long)]
+    pub(crate) confirm: bool,
+
+    /// prefix to add to output filenames
+    #[clap(long)]
+    pub(crate) output_prefix: Option<String>,
+
+    /// postfix to add to output filenames
+    #[clap(long)]
+    pub(crate) output_postfix: Option<String>,
 }
 
 //

@@ -1,12 +1,12 @@
-use std::path::PathBuf;
-use std::io::BufWriter as StdBufWriter;
-use parquet::arrow::arrow_writer::ArrowWriter;
-use parquet::file::properties::WriterProperties;
+use crate::TablError;
 use futures::StreamExt;
+use parquet::arrow::arrow_writer::ArrowWriter;
+use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
+use parquet::file::properties::WriterProperties;
+use std::io::BufWriter as StdBufWriter;
+use std::path::PathBuf;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
-use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
-use crate::TablError;
 
 /// merge parquet files into one
 pub async fn merge_parquets(
@@ -15,7 +15,9 @@ pub async fn merge_parquets(
     batch_size: usize,
 ) -> Result<(), crate::TablError> {
     if input_paths.is_empty() {
-        return Err(crate::TablError::Error("No input files provided".to_string()));
+        return Err(crate::TablError::Error(
+            "No input files provided".to_string(),
+        ));
     }
 
     let tmp_output_path = super::parquet_drop::create_tmp_target(output_path.as_path());
@@ -50,7 +52,9 @@ pub async fn merge_parquets(
             println!();
             println!("SCHEMA OF {}:", input_path.to_string_lossy());
             println!("{:?}", reader_stream.schema());
-            return Err(TablError::SchemaError("schemas of files are not equal".to_string()));
+            return Err(TablError::SchemaError(
+                "schemas of files are not equal".to_string(),
+            ));
         }
 
         while let Some(batch) = reader_stream.next().await {

@@ -2913,6 +2913,7 @@ version = "0.1.0"
 dependencies = [
  "arrow",
  "futures",
+ "hex",
  "parquet",
  "polars 0.40.0",
  "tempfile",
@@ -2924,6 +2925,7 @@ dependencies = [
 name = "tabl-cli"
 version = "0.1.0"
 dependencies = [
+ "arrow",
  "clap",
  "inquire",
  "polars 0.40.0",
