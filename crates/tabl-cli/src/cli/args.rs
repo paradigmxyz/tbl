@@ -85,7 +85,7 @@ pub(crate) struct LsArgs {
 #[derive(Parser)]
 pub(crate) struct SchemaArgs {
     /// input path(s) to use
-    #[clap(short, long)]
+    #[clap()]
     pub(crate) inputs: Option<Vec<PathBuf>>,
 
     /// recursively list all files in tree

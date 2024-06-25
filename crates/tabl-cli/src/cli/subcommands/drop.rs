@@ -45,7 +45,11 @@ pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
     }
 
     // edit files
-    println!("not implemented yet");
+    let input_outputs: Vec<_> = inputs.into_iter().zip(outputs.into_iter()).collect();
+    let batch_size = 1_000_000;
+    let max_concurrent = 32;
+    tabl::parquet::drop_parquets_columns(input_outputs, args.columns, batch_size, max_concurrent)
+        .await?;
 
     Ok(())
 }
@@ -107,7 +111,7 @@ async fn print_drop_summary(
 
     println!();
     println!(
-        "dropping {} {} from {} {} {}",
+        "dropping {} {} from {} {}{}",
         column_str,
         columns_str,
         tabl::formats::format_with_commas(inputs.len() as u64)

@@ -245,7 +245,12 @@ fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), Tab
     let percent_disk: Vec<_> = summary
         .columns
         .iter()
-        .map(|x| format!("{:.2}%", 100.0 * (x.n_bytes_compressed as f64) / (total_disk_bytes as f64)))
+        .map(|x| {
+            format!(
+                "{:.2}%",
+                100.0 * (x.n_bytes_compressed as f64) / (total_disk_bytes as f64)
+            )
+        })
         .collect();
 
     // build table

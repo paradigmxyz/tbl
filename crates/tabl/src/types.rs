@@ -23,6 +23,10 @@ pub enum TablError {
     #[error(transparent)]
     StripPrefixError(#[from] std::path::StripPrefixError),
 
+    /// Error wrapper for tokio errors.
+    #[error(transparent)]
+    ArrowError(#[from] arrow::error::ArrowError),
+
     /// Error wrapper for schema errors.
     #[error("Schema error: {0}")]
     SchemaError(String),

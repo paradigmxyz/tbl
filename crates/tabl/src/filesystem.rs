@@ -1,11 +1,11 @@
 use crate::TablError;
+use futures::stream::StreamExt;
 use std::collections::HashMap;
 use std::path::{Component, Path, PathBuf};
-use futures::stream::StreamExt;
 
 /// count number of existing files
 pub async fn count_existing_files(paths: &[PathBuf]) -> usize {
-    const CONCURRENT_LIMIT: usize = 1000;  // Adjust based on your system's capabilities
+    const CONCURRENT_LIMIT: usize = 1000; // Adjust based on your system's capabilities
 
     futures::stream::iter(paths)
         .map(tokio::fs::metadata)
@@ -99,7 +99,7 @@ pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TablError> {
 pub fn get_input_paths(
     inputs: Option<Vec<PathBuf>>,
     tree: bool,
-    ) -> Result<Vec<PathBuf>, TablError> {
+) -> Result<Vec<PathBuf>, TablError> {
     // get paths
     let raw_paths = match inputs {
         Some(raw_paths) => raw_paths,
@@ -149,21 +149,21 @@ impl OutputPathSpec {
 
     /// set inputs
     pub fn inputs<I>(mut self, inputs: I) -> Self
-        where
+    where
         I: Into<InputPaths>,
-        {
-            self.inputs = inputs.into().0;
-            self
-        }
+    {
+        self.inputs = inputs.into().0;
+        self
+    }
 
     /// set output_dir
     pub fn output_dir<T>(mut self, output_dir: T) -> Self
-        where
+    where
         T: Into<OutputDirType>,
-        {
-            self.output_dir = output_dir.into().into();
-            self
-        }
+    {
+        self.output_dir = output_dir.into().into();
+        self
+    }
 
     /// set tree
     pub fn tree(mut self, tree: bool) -> Self {
@@ -173,21 +173,21 @@ impl OutputPathSpec {
 
     /// set file_prefix
     pub fn file_prefix<T>(mut self, file_prefix: T) -> Self
-        where
+    where
         T: Into<Option<String>>,
-        {
-            self.file_prefix = file_prefix.into();
-            self
-        }
+    {
+        self.file_prefix = file_prefix.into();
+        self
+    }
 
     /// set file_postfix
     pub fn file_postfix<T>(mut self, file_postfix: T) -> Self
-        where
+    where
         T: Into<Option<String>>,
-        {
-            self.file_postfix = file_postfix.into();
-            self
-        }
+    {
+        self.file_postfix = file_postfix.into();
+        self
+    }
 }
 
 /// output dir type
@@ -234,7 +234,7 @@ impl From<PathBuf> for OutputDirType {
 
 impl<T> From<Option<T>> for OutputDirType
 where
-T: Into<OutputDirType>,
+    T: Into<OutputDirType>,
 {
     fn from(opt: Option<T>) -> Self {
         match opt {
@@ -286,50 +286,50 @@ impl<'a> From<Option<Vec<&'a str>>> for InputPaths {
 
 /** get_output_dir() has many possible combinations of parameters
 
-  possible dimensions of inputs
-  - dimension: with or without --tree
-  - dimension: with or without --output-dir
-  - dimension: with or without --inputs
-  - dimension: single or multiple --inputs
-  - dimension: relative or absolute --inputs
-  - dimension: file or directory --inputs
+possible dimensions of inputs
+- dimension: with or without --tree
+- dimension: with or without --output-dir
+- dimension: with or without --inputs
+- dimension: single or multiple --inputs
+- dimension: relative or absolute --inputs
+- dimension: file or directory --inputs
 
-  cases that are easy:
-  - without --inputs, without --tree, without --output-dir
-  - read from CWD, write outputs to CWD
-  - without --inputs, without --tree, with --output-dir
-  - read from CWD, write outputs to --output-dir
-  - without --inputs, with --tree, without --output-dir
-  - read from CWD, write each file in its own original dir
-  - without --inputs, with --tree, with --output-dir
-  - read from CWD, write relative tree paths relative to --output-dir tree
+cases that are easy:
+- without --inputs, without --tree, without --output-dir
+- read from CWD, write outputs to CWD
+- without --inputs, without --tree, with --output-dir
+- read from CWD, write outputs to --output-dir
+- without --inputs, with --tree, without --output-dir
+- read from CWD, write each file in its own original dir
+- without --inputs, with --tree, with --output-dir
+- read from CWD, write relative tree paths relative to --output-dir tree
 
-  cases that are harder:
-  - with single file --inputs
-  - --tree doesnt matter
-  - without --output-dir: writes file to that file's dir
-  - with --output-dir: writes file to that dir
-  - with single dir --inputs
-  - without --tree, without --output-dir
-  - read from the input dir, write to the input dir
-  - without --tree, with --output-dir
-  - read from the input dir, write to the output dir
-  - with --tree, without --output-dir
-  - use the input dir as tree root for both reading and writing
-  - with --tree, with --output-dir
-  - use input tree as reading tree root, output dir as writing tree root
-  - with multiple --inputs
-  - just treat each input path independently
+cases that are harder:
+- with single file --inputs
+- --tree doesnt matter
+- without --output-dir: writes file to that file's dir
+- with --output-dir: writes file to that dir
+- with single dir --inputs
+- without --tree, without --output-dir
+- read from the input dir, write to the input dir
+- without --tree, with --output-dir
+- read from the input dir, write to the output dir
+- with --tree, without --output-dir
+- use the input dir as tree root for both reading and writing
+- with --tree, with --output-dir
+- use input tree as reading tree root, output dir as writing tree root
+- with multiple --inputs
+- just treat each input path independently
 
-  if --output-dir is used without --tree, every output goes directly in directory
-  if --output-dir is used with --tree, the --output-dir is used as the new tree root
-  */
+if --output-dir is used without --tree, every output goes directly in directory
+if --output-dir is used with --tree, the --output-dir is used as the new tree root
+*/
 pub fn get_output_paths(
     // inputs: Option<Vec<PathBuf>>,
     // output_dir: Option<PathBuf>,
     // tree: bool,
     output_spec: OutputPathSpec,
-    ) -> Result<(Vec<PathBuf>, Vec<PathBuf>), TablError> {
+) -> Result<(Vec<PathBuf>, Vec<PathBuf>), TablError> {
     // gather inputs
     let output_dir = output_spec.output_dir;
     let inputs = match output_spec.inputs {
@@ -349,7 +349,7 @@ pub fn get_output_paths(
                 &output_dir,
                 &output_spec.file_prefix,
                 &output_spec.file_postfix,
-                )?;
+            )?;
             return_inputs.push(input.clone());
             return_outputs.push(output);
         } else if metadata.is_dir() {
@@ -361,7 +361,7 @@ pub fn get_output_paths(
                         &output_dir,
                         &output_spec.file_prefix,
                         &output_spec.file_postfix,
-                        )?;
+                    )?;
                     return_inputs.push(sub_input);
                     return_outputs.push(output);
                 }
@@ -382,9 +382,9 @@ pub fn get_output_paths(
                         &None,
                         &output_spec.file_prefix,
                         &output_spec.file_postfix,
-                        )?;
+                    )?;
 
-                    return_inputs.push(input.clone());
+                    return_inputs.push(sub_input.clone());
                     return_outputs.push(output);
                 }
             }
@@ -399,9 +399,9 @@ pub fn get_output_paths(
         *count_per_output.entry(output.clone()).or_insert(0) += 1;
         if count_per_output[output] > 1 {
             return Err(TablError::Error(format!(
-                        "Duplicate output path: {:?}",
-                        output
-                        )));
+                "Duplicate output path: {:?}",
+                output
+            )));
         }
     }
 
@@ -414,7 +414,7 @@ fn convert_file_path(
     output_dir: &Option<PathBuf>,
     file_prefix: &Option<String>,
     file_postfix: &Option<String>,
-    ) -> Result<PathBuf, TablError> {
+) -> Result<PathBuf, TablError> {
     // change output directory
     let output = match output_dir.as_ref() {
         Some(output_dir) => {
@@ -438,7 +438,7 @@ fn convert_file_path(
             stem.to_string_lossy(),
             file_postfix.as_deref().unwrap_or(""),
             extension.map_or_else(String::new, |ext| format!(".{}", ext.to_string_lossy()))
-            );
+        );
 
         Ok(output.with_file_name(new_filename))
     } else {
@@ -453,7 +453,7 @@ pub fn get_output_path(
     root_dir: Option<String>,
     output_prefix: Option<String>,
     output_postfix: Option<String>,
-    ) -> PathBuf {
+) -> PathBuf {
     let path = Path::new(&path);
 
     // Calculate new directory based on `root_dir` and `output_dir`
@@ -496,49 +496,49 @@ pub fn get_output_path(
 }
 
 /*
-   tests
-   for the tests, generate the following file tree:
-   root/
-   super_data_a.parquet
-   super_data_b.parquet
-   data1/
-   data1_a.parquet
-   data1_b.parquet
-   sub_data1_1/
-   sub_data1_a.parquet
-   sub_data1_b.parquet
-   data2/
-   data2_a.parquet
-   data2_b.parquet
-   test cases:
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./root").tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./other_root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./other_root").tree(true))
+tests
+for the tests, generate the following file tree:
+root/
+super_data_a.parquet
+super_data_b.parquet
+data1/
+data1_a.parquet
+data1_b.parquet
+sub_data1_1/
+sub_data1_a.parquet
+sub_data1_b.parquet
+data2/
+data2_a.parquet
+data2_b.parquet
+test cases:
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./root").tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./other_root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root"]).output_dir("./other_root").tree(true))
 
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./root").tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./other_root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./other_root").tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./root").tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./other_root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1"]).output_dir("./other_root").tree(true))
 
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./root").tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./other_root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./other_root").tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./root").tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./other_root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1", "./root/data2"]).output_dir("./other_root").tree(true))
 
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./root").tree(true))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./other_root"))
-   get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./other_root").tree(true))
-   */
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./root").tree(true))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./other_root"))
+get_output_paths(OutputPathSpec::new().inputs(vec!["./root/data1/data1_a.parquet", "./root/super_data_a.parquet"]).output_dir("./other_root").tree(true))
+*/
 #[cfg(test)]
 mod tests {
     use super::*;
