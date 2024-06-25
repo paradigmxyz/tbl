@@ -9,7 +9,7 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
         Commands::Schema(args) => schema_command(args).await,
         Commands::Cast(args) => cast_command(args),
         Commands::Drop(args) => drop_command(args).await,
-        Commands::Merge(args) => merge_command(args),
+        Commands::Merge(args) => merge_command(args).await,
         Commands::Partition(args) => partition_command(args),
         Commands::Pl(args) => pl_command(args),
     }
@@ -172,9 +172,21 @@ pub(crate) struct CastArgs {
 /// Arguments for the `merge` subcommand
 #[derive(Parser)]
 pub(crate) struct MergeArgs {
+    /// output path to use
+    #[clap()]
+    pub(crate) output_path: PathBuf,
+
     /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    #[clap()]
+    pub(crate) inputs: Vec<PathBuf>,
+
+    /// keep original files after merging
+    #[clap(long)]
+    pub(crate) keep: bool,
+
+    /// confirm merge
+    #[clap(long)]
+    pub(crate) confirm: bool,
 }
 
 /// Arguments for the `partition` subcommand

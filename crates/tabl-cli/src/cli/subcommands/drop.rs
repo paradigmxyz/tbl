@@ -47,7 +47,7 @@ pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
     // edit files
     let input_outputs: Vec<_> = inputs.into_iter().zip(outputs.into_iter()).collect();
     let batch_size = 1_000_000;
-    let max_concurrent = 32;
+    let max_concurrent = 16;
     tabl::parquet::drop_parquets_columns(input_outputs, args.columns, batch_size, max_concurrent)
         .await?;
 
