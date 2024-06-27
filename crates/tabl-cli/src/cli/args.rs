@@ -13,6 +13,8 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
         Commands::Merge(args) => merge_command(args).await,
         Commands::Partition(args) => partition_command(args),
         Commands::Pl(args) => pl_command(args),
+        Commands::Df(args) => df_command(args),
+        Commands::Lf(args) => lf_command(args),
     }
 }
 
@@ -67,6 +69,10 @@ pub(crate) enum Commands {
     Partition(PartitionArgs),
     /// Edit files using polars python syntax
     Pl(PlArgs),
+    /// Load inputs as a dataframe in an interactive python session
+    Df(DfArgs),
+    /// Load inputs as a lazyframe in an interactive python session
+    Lf(LfArgs),
 }
 
 //
@@ -249,4 +255,40 @@ pub(crate) struct PlArgs {
     /// input path(s) to use
     #[clap(short, long)]
     pub(crate) inputs: Option<Vec<PathBuf>>,
+}
+
+/// Arguments for the `df` subcommand
+#[derive(Parser)]
+pub(crate) struct DfArgs {
+    /// input path(s) to use
+    #[clap()]
+    pub(crate) inputs: Option<Vec<PathBuf>>,
+
+    /// use tree of inputs
+    #[clap(long)]
+    pub(crate) tree: bool,
+
+    /// python executable to use
+    #[clap(short, long)]
+    pub(crate) executable: Option<String>,
+
+    /// load lazily
+    #[clap(short, long)]
+    pub(crate) lazy: bool,
+}
+
+/// Arguments for the `lf` subcommand
+#[derive(Parser)]
+pub(crate) struct LfArgs {
+    /// input path(s) to use
+    #[clap()]
+    pub(crate) inputs: Option<Vec<PathBuf>>,
+
+    /// use tree of inputs
+    #[clap(long)]
+    pub(crate) tree: bool,
+
+    /// python executable to use
+    #[clap(short, long)]
+    pub(crate) executable: Option<String>,
 }
