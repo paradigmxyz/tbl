@@ -18,10 +18,27 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
 
 /// Utility for creating and managing MESC RPC configurations
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None, disable_help_subcommand = true)]
+#[clap(author, version, about, long_about = None, disable_help_subcommand = true, styles=get_styles())]
 pub(crate) struct Cli {
     #[clap(subcommand)]
     pub(crate) command: Commands,
+}
+
+pub(crate) fn get_styles() -> clap::builder::Styles {
+    let white = anstyle::Color::Rgb(anstyle::RgbColor(255, 255, 255));
+    let green = anstyle::Color::Rgb(anstyle::RgbColor(0, 225, 0));
+    let grey = anstyle::Color::Rgb(anstyle::RgbColor(170, 170, 170));
+    let title = anstyle::Style::new().bold().fg_color(Some(green));
+    let arg = anstyle::Style::new().bold().fg_color(Some(white));
+    let comment = anstyle::Style::new().fg_color(Some(grey));
+    clap::builder::Styles::styled()
+        .header(title)
+        .error(comment)
+        .usage(title)
+        .literal(arg)
+        .placeholder(comment)
+        .valid(title)
+        .invalid(comment)
 }
 
 /// Define your subcommands as an enum

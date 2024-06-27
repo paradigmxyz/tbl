@@ -2925,6 +2925,7 @@ dependencies = [
 name = "tabl-cli"
 version = "0.1.0"
 dependencies = [
+ "anstyle",
  "arrow",
  "clap",
  "inquire",
