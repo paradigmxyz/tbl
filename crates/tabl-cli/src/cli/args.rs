@@ -5,14 +5,21 @@ use std::path::PathBuf;
 
 pub(crate) async fn run_cli() -> Result<(), TablCliError> {
     match Cli::parse().command {
+        // read
         Commands::Ls(args) => ls_command(args).await,
         Commands::Schema(args) => schema_command(args).await,
+        Commands::Cat(args) => cat_command(args).await,
+        Commands::Head(args) => head_command(args).await,
+        Commands::Tail(args) => tail_command(args).await,
+        Commands::Count(args) => count_command(args).await,
+        // edit
         Commands::Insert(args) => insert_command(args).await,
         Commands::Drop(args) => drop_command(args).await,
         Commands::Cast(args) => cast_command(args),
         Commands::Merge(args) => merge_command(args).await,
         Commands::Partition(args) => partition_command(args),
         Commands::Pl(args) => pl_command(args),
+        // interactive
         Commands::Df(args) => df_command(args),
         Commands::Lf(args) => lf_command(args),
     }
@@ -54,6 +61,14 @@ pub(crate) enum Commands {
     Ls(LsArgs),
     /// Show schema of tabular files
     Schema(SchemaArgs),
+    /// Show first N rows of a dataset
+    Cat(CatArgs),
+    /// Show first N rows of a dataset (alias for `cat`)
+    Head(HeadArgs),
+    /// Show last N rows of a dataset (alias for `cat --tail`)
+    Tail(TailArgs),
+    /// Count value occurences within column(s) of data
+    Count(CountArgs),
     //
     // // edit commands
     //
@@ -69,6 +84,9 @@ pub(crate) enum Commands {
     Partition(PartitionArgs),
     /// Edit files using polars python syntax
     Pl(PlArgs),
+    //
+    // // interactive commands
+    //
     /// Load inputs as a dataframe in an interactive python session
     Df(DfArgs),
     /// Load inputs as a lazyframe in an interactive python session
@@ -78,6 +96,84 @@ pub(crate) enum Commands {
 //
 // // read commands
 //
+
+#[derive(Parser)]
+pub(crate) struct InputArgs {
+    /// input path(s) to use
+    #[clap(short, long)]
+    pub(crate) inputs: Option<Vec<PathBuf>>,
+
+    /// recursively list all files in tree
+    #[clap(long)]
+    pub(crate) tree: bool,
+}
+
+#[derive(Parser)]
+pub(crate) struct CatArgs {
+    #[clap(flatten)]
+    pub(crate) head_args: HeadArgs,
+
+    #[clap(long)]
+    pub(crate) tail: bool,
+}
+
+#[derive(Parser)]
+pub(crate) struct HeadArgs {
+    #[clap(flatten)]
+    pub(crate) input_args: InputArgs,
+
+    /// columns to print
+    #[clap(long)]
+    pub(crate) columns: Option<Vec<String>>,
+
+    /// number of file names to print
+    #[clap(long)]
+    pub(crate) n: Option<usize>,
+
+    /// sort before showing preview
+    #[clap(short, long)]
+    pub(crate) sort: Option<Vec<String>>,
+
+    /// offset before printing head
+    #[clap(short, long)]
+    pub(crate) offset: Option<usize>,
+}
+
+#[derive(Parser)]
+pub(crate) struct TailArgs {
+    #[clap(flatten)]
+    pub(crate) input_args: InputArgs,
+
+    /// columns to print
+    #[clap(long)]
+    pub(crate) columns: Option<Vec<String>>,
+
+    /// number of file names to print
+    #[clap(long)]
+    pub(crate) n: Option<usize>,
+
+    /// sort before showing preview
+    #[clap(short, long)]
+    pub(crate) sort: Option<Vec<String>>,
+
+    /// limit to this number of rows
+    #[clap(short, long)]
+    pub(crate) limit: Option<usize>,
+}
+
+#[derive(Parser)]
+pub(crate) struct CountArgs {
+    /// columns to print
+    #[clap()]
+    pub(crate) columns: Vec<String>,
+
+    #[clap(flatten)]
+    pub(crate) input_args: InputArgs,
+
+    /// number of file names to print
+    #[clap(long)]
+    pub(crate) n: Option<usize>,
+}
 
 /// Arguments for the `ls` subcommand
 #[derive(Parser)]
@@ -256,6 +352,10 @@ pub(crate) struct PlArgs {
     #[clap(short, long)]
     pub(crate) inputs: Option<Vec<PathBuf>>,
 }
+
+//
+// // interactive commands
+//
 
 /// Arguments for the `df` subcommand
 #[derive(Parser)]

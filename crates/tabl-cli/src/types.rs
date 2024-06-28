@@ -23,6 +23,10 @@ pub(crate) enum TablCliError {
     #[error(transparent)]
     ToolstrError(#[from] toolstr::FormatError),
 
+    /// Error wrapper for toolstr errors.
+    #[error(transparent)]
+    PolarsError(#[from] polars::prelude::PolarsError),
+
     /// Error caused by missing schema
     #[error("Argument error: {0}")]
     MissingSchemaError(String),

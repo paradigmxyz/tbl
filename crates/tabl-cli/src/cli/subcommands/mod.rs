@@ -1,5 +1,9 @@
+mod cat;
+mod count;
+mod head;
 mod ls;
 mod schema;
+mod tail;
 
 mod cast;
 mod drop;
@@ -11,8 +15,12 @@ mod pl;
 mod df;
 mod lf;
 
+pub(crate) use cat::*;
+pub(crate) use count::*;
+pub(crate) use head::*;
 pub(crate) use ls::*;
 pub(crate) use schema::*;
+pub(crate) use tail::*;
 
 pub(crate) use cast::*;
 pub(crate) use drop::*;
