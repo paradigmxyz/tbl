@@ -8,9 +8,9 @@ pub(crate) async fn insert_command(args: InsertArgs) -> Result<(), TablCliError>
 
     // parse inputs
     let output_path_spec = tbl::filesystem::OutputPathSpec::new()
-        .inputs(args.inputs.clone())
+        .inputs(args.inputs.paths.clone())
         .output_dir(args.output_dir.clone())
-        .tree(args.tree)
+        .tree(args.inputs.tree)
         .sort(true)
         .file_prefix(args.output_prefix.clone())
         .file_postfix(args.output_postfix.clone());
@@ -137,7 +137,7 @@ fn print_summary(
         )
     }
     println!("columns: {}", column_str);
-    let relpath = if args.inputs.is_none() {
+    let relpath = if args.inputs.paths.is_none() {
         Some(std::env::current_dir()?)
     } else {
         None

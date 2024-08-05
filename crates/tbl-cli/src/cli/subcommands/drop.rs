@@ -8,9 +8,9 @@ pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
 
     // determine which paths to use
     let output_spec = tbl::filesystem::OutputPathSpec::new()
-        .inputs(args.inputs.clone())
+        .inputs(args.inputs.paths.clone())
         .output_dir(args.output_dir.clone())
-        .tree(args.tree)
+        .tree(args.inputs.tree)
         .file_prefix(args.output_prefix.clone())
         .file_postfix(args.output_postfix.clone());
     let (inputs, outputs) = tbl::filesystem::get_output_paths(output_spec)?;
@@ -62,7 +62,7 @@ async fn print_drop_summary(
     // print files
     let n_show_files = 10;
     println!("files:");
-    if args.inputs.is_none() {
+    if args.inputs.paths.is_none() {
         let cwd = std::env::current_dir()?;
         for path in inputs.iter().take(n_show_files) {
             println!(

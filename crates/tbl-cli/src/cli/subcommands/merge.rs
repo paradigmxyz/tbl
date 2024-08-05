@@ -4,8 +4,10 @@ use crate::{MergeArgs, TablCliError};
 pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
 
+    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree)?;
+
     // check inputs
-    if args.inputs.len() <= 1 {
+    if paths.len() <= 1 {
         return Err(TablCliError::Error(
             "must specify at least 2 files to merge".to_string(),
         ));
@@ -14,20 +16,20 @@ pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
     // print summary
     println!(
         "merging {} files:",
-        format!("{}", args.inputs.len()).colorize_constant()
+        format!("{}", paths.len()).colorize_constant()
     );
-    if args.inputs.len() > 10 {
-        for path in args.inputs.iter().take(5) {
+    if paths.len() > 10 {
+        for path in paths.iter().take(5) {
             println!(
                 "{} {}",
                 "-".colorize_title(),
                 path.to_string_lossy().colorize_string()
             )
         }
-        if args.inputs.len() > 10 {
+        if paths.len() > 10 {
             println!("...")
         }
-        for path in args.inputs.iter().skip(args.inputs.len() - 5) {
+        for path in paths.iter().skip(paths.len() - 5) {
             println!(
                 "{} {}",
                 "-".colorize_title(),
@@ -35,7 +37,7 @@ pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
             )
         }
     } else {
-        for path in args.inputs.iter().take(10) {
+        for path in paths.iter().take(10) {
             println!(
                 "{} {}",
                 "-".colorize_title(),
@@ -63,18 +65,18 @@ pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
     }
 
     // merge files
-    tbl::parquet::merge_parquets(&args.inputs, &args.output_path, 1_000_000).await?;
+    tbl::parquet::merge_parquets(&paths, &args.output_path, 1_000_000).await?;
 
     // delete old files
     if !args.keep {
-        for input in args.inputs.iter() {
+        for input in paths.iter() {
             std::fs::remove_file(input)?
         }
         println!(
             "{}",
             format!(
                 "original {} files deleted",
-                format!("{}", args.inputs.len()).colorize_constant()
+                format!("{}", paths.len()).colorize_constant()
             )
             .colorize_variable()
         );
