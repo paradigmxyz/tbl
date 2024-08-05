@@ -1,5 +1,5 @@
 
-# tabl
+# tbl
 
 CLI utility for reading and editing parquet files
 
@@ -12,7 +12,7 @@ CLI utility for reading and editing parquet files
 ```
 cli tool for reading and modifying tabular files
 
-Usage: tabl <COMMAND>
+Usage: tbl <COMMAND>
 
 Commands:
   ls         Show list of tabular files

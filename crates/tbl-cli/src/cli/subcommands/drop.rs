@@ -7,16 +7,16 @@ pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
 
     // determine which paths to use
-    let output_spec = tabl::filesystem::OutputPathSpec::new()
+    let output_spec = tbl::filesystem::OutputPathSpec::new()
         .inputs(args.inputs.clone())
         .output_dir(args.output_dir.clone())
         .tree(args.tree)
         .file_prefix(args.output_prefix.clone())
         .file_postfix(args.output_postfix.clone());
-    let (inputs, outputs) = tabl::filesystem::get_output_paths(output_spec)?;
+    let (inputs, outputs) = tbl::filesystem::get_output_paths(output_spec)?;
 
     // get schemas of input paths
-    let schemas = tabl::parquet::get_parquet_schemas(&inputs).await?;
+    let schemas = tbl::parquet::get_parquet_schemas(&inputs).await?;
 
     // check that all files have the relevant columns
     for (input, schema) in inputs.iter().zip(schemas) {
@@ -48,7 +48,7 @@ pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
     let input_outputs: Vec<_> = inputs.into_iter().zip(outputs.into_iter()).collect();
     let batch_size = 1_000_000;
     let max_concurrent = 16;
-    tabl::parquet::drop_parquets_columns(input_outputs, args.columns, batch_size, max_concurrent)
+    tbl::parquet::drop_parquets_columns(input_outputs, args.columns, batch_size, max_concurrent)
         .await?;
 
     Ok(())
@@ -114,7 +114,7 @@ async fn print_drop_summary(
         "dropping {} {} from {} {}{}",
         column_str,
         columns_str,
-        tabl::formats::format_with_commas(inputs.len() as u64)
+        tbl::formats::format_with_commas(inputs.len() as u64)
             .colorize_constant()
             .bold(),
         file_str,
@@ -122,11 +122,11 @@ async fn print_drop_summary(
     );
 
     if args.output_dir.is_some() {
-        let n_existing = tabl::filesystem::count_existing_files(outputs).await;
+        let n_existing = tbl::filesystem::count_existing_files(outputs).await;
         if n_existing > 0 {
             println!(
                 "{} of the output files already exist and will be overwritten",
-                tabl::formats::format_with_commas(n_existing as u64).colorize_constant(),
+                tbl::formats::format_with_commas(n_existing as u64).colorize_constant(),
             );
         }
     }

@@ -63,7 +63,7 @@ pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
     }
 
     // merge files
-    tabl::parquet::merge_parquets(&args.inputs, &args.output_path, 1_000_000).await?;
+    tbl::parquet::merge_parquets(&args.inputs, &args.output_path, 1_000_000).await?;
 
     // delete old files
     if !args.keep {

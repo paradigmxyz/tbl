@@ -1,5 +1,5 @@
 [package]
-name = "tabl"
+name = "tbl"
 description = "utilities for reading and modifying tabular files"
 version.workspace = true
 edition.workspace = true

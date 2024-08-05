@@ -3,13 +3,13 @@ use toolstr::Colorize;
 
 pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
     // get paths
-    let paths = tabl::filesystem::get_input_paths(args.inputs, args.tree)?;
+    let paths = tbl::filesystem::get_input_paths(args.inputs, args.tree)?;
 
     // clear common prefix
     let paths = if args.absolute {
         paths
     } else {
-        let common_prefix = tabl::filesystem::get_common_prefix(&paths)?;
+        let common_prefix = tbl::filesystem::get_common_prefix(&paths)?;
         let mut new_paths = Vec::new();
         for path in paths {
             new_paths.push(path.strip_prefix(&common_prefix)?.to_owned())
@@ -49,7 +49,7 @@ pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
             "{}",
             format!(
                 "... {} files not shown",
-                tabl::formats::format_with_commas((paths.len() - n_print) as u64).bold()
+                tbl::formats::format_with_commas((paths.len() - n_print) as u64).bold()
             )
             .truecolor(150, 150, 150)
         );
@@ -58,16 +58,16 @@ pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
     // get row counts
     let path_refs: Vec<&std::path::Path> =
         paths.iter().map(|path_buf| path_buf.as_path()).collect();
-    let row_counts = tabl::parquet::get_parquet_row_counts(&path_refs).await?;
+    let row_counts = tbl::parquet::get_parquet_row_counts(&path_refs).await?;
 
     // print total summary
     println!(
         "{} rows stored in {} across {} tabular files",
-        tabl::formats::format_with_commas(row_counts.iter().sum())
+        tbl::formats::format_with_commas(row_counts.iter().sum())
             .green()
             .bold(),
-        tabl::formats::format_bytes(total_size).green().bold(),
-        tabl::formats::format_with_commas(paths.len() as u64)
+        tbl::formats::format_bytes(total_size).green().bold(),
+        tbl::formats::format_with_commas(paths.len() as u64)
             .green()
             .bold()
     );

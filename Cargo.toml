@@ -1,14 +1,14 @@
 
 [workspace]
-members = ["crates/tabl", "crates/tabl-cli"]
+members = ["crates/tbl", "crates/tbl-cli"]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/paradigmxyz/tabl"
-repository = "https://github.com/paradigmxyz/tabl"
+homepage = "https://github.com/paradigmxyz/tbl"
+repository = "https://github.com/paradigmxyz/tbl"
 exclude = [".github/"]
 
 [workspace.dependencies]

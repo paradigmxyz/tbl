@@ -1,4 +1,4 @@
-use tabl::TablError;
+use tbl::TablError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

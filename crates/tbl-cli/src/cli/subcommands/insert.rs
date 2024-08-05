@@ -7,14 +7,14 @@ pub(crate) async fn insert_command(args: InsertArgs) -> Result<(), TablCliError>
     inquire::set_global_render_config(crate::styles::get_render_config());
 
     // parse inputs
-    let output_path_spec = tabl::filesystem::OutputPathSpec::new()
+    let output_path_spec = tbl::filesystem::OutputPathSpec::new()
         .inputs(args.inputs.clone())
         .output_dir(args.output_dir.clone())
         .tree(args.tree)
         .sort(true)
         .file_prefix(args.output_prefix.clone())
         .file_postfix(args.output_postfix.clone());
-    let (inputs, outputs) = tabl::filesystem::get_output_paths(output_path_spec)?;
+    let (inputs, outputs) = tbl::filesystem::get_output_paths(output_path_spec)?;
     let (column_names, column_dtypes) = parse_user_dtypes(args.new_columns.clone())?;
 
     // print summary
@@ -30,7 +30,7 @@ pub(crate) async fn insert_command(args: InsertArgs) -> Result<(), TablCliError>
     }
 
     // edit files
-    tabl::parquet::insert_parquets_columns(
+    tbl::parquet::insert_parquets_columns(
         &inputs,
         &outputs,
         column_names,

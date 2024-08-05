@@ -4,15 +4,15 @@ use polars::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tabl::formats::{format_bytes, format_with_commas};
-use tabl::parquet::{combine_tabular_summaries, summarize_by_schema, TabularSummary};
+use tbl::formats::{format_bytes, format_with_commas};
+use tbl::parquet::{combine_tabular_summaries, summarize_by_schema, TabularSummary};
 use toolstr::Colorize;
 
 pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError> {
     // get schemas
-    let paths = tabl::filesystem::get_input_paths(args.inputs, args.tree)?;
-    let summaries = tabl::parquet::get_parquet_summaries(&paths).await?;
-    let ref_summaries: Vec<&tabl::parquet::TabularSummary> = summaries.iter().collect();
+    let paths = tbl::filesystem::get_input_paths(args.inputs, args.tree)?;
+    let summaries = tbl::parquet::get_parquet_summaries(&paths).await?;
+    let ref_summaries: Vec<&tbl::parquet::TabularSummary> = summaries.iter().collect();
     let by_schema = summarize_by_schema(ref_summaries.as_slice())?;
 
     // summarize entire set
@@ -22,7 +22,7 @@ pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError>
     let paths = if args.absolute {
         paths
     } else {
-        let common_prefix = tabl::filesystem::get_common_prefix(&paths)?;
+        let common_prefix = tbl::filesystem::get_common_prefix(&paths)?;
         let mut new_paths = Vec::new();
         for path in paths {
             new_paths.push(path.strip_prefix(&common_prefix)?.to_owned())

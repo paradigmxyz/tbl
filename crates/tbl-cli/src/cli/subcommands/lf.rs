@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub(crate) fn lf_command(args: LfArgs) -> Result<(), TablCliError> {
-    let paths = tabl::filesystem::get_input_paths(args.inputs, args.tree)?;
+    let paths = tbl::filesystem::get_input_paths(args.inputs, args.tree)?;
     load_df_interactive(paths, true)?;
     Ok(())
 }
