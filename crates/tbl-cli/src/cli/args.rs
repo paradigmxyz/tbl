@@ -137,8 +137,60 @@ pub(crate) struct InputArgs {
     pub(crate) paths: Option<Vec<PathBuf>>,
 
     /// recursively list all files in tree
-    #[clap(long)]
+    #[clap(short, long)]
     pub(crate) tree: bool,
+}
+
+/// Arguments for the `ls` subcommand
+#[derive(Parser)]
+pub(crate) struct LsArgs {
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
+
+    /// number of file names to print
+    #[clap(short, long)]
+    pub(crate) n: Option<usize>,
+
+    /// show absolute paths instead of relative
+    #[clap(short, long)]
+    pub(crate) absolute: bool,
+
+    /// display schemas instead of paths
+    #[clap(short, long)]
+    pub(crate) schema: bool,
+
+    /// display bytes stats
+    #[clap(short, long)]
+    pub(crate) bytes: bool,
+
+    /// display stats of each schema group
+    #[clap(long)]
+    pub(crate) schema_stats: bool,
+}
+
+/// Arguments for the `schema` subcommand
+#[derive(Parser)]
+pub(crate) struct SchemaArgs {
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
+
+    /// show absolute paths instead of relative
+    #[clap(long)]
+    pub(crate) absolute: bool,
+
+    /// print top n schemas
+    #[clap(long)]
+    pub(crate) n_schemas: Option<usize>,
+
+    /// print example paths of each schema
+    #[clap(long)]
+    pub(crate) include_example_paths: bool,
+
+    /// sort schemas by row count, file count, or byte count
+    #[clap(long, default_value = "bytes")]
+    pub(crate) sort: String,
 }
 
 #[derive(Parser)]
@@ -235,62 +287,6 @@ pub(crate) struct CountArgs {
     /// number of values to display
     #[clap(long)]
     pub(crate) n: Option<usize>,
-}
-
-/// Arguments for the `ls` subcommand
-#[derive(Parser)]
-pub(crate) struct LsArgs {
-    /// input path arguments
-    #[clap(flatten)]
-    pub(crate) inputs: InputArgs,
-
-    /// recursively list all files in tree
-    #[clap(long)]
-    pub(crate) tree: bool,
-
-    /// number of file names to print
-    #[clap(long)]
-    pub(crate) n: Option<usize>,
-
-    /// show absolute paths instead of relative
-    #[clap(long)]
-    pub(crate) absolute: bool,
-
-    /// show long version with extra metadata
-    #[clap(long)]
-    pub(crate) long: bool,
-
-    /// show files only, no totals
-    #[clap(long)]
-    pub(crate) files_only: bool,
-}
-
-/// Arguments for the `schema` subcommand
-#[derive(Parser)]
-pub(crate) struct SchemaArgs {
-    /// input path arguments
-    #[clap(flatten)]
-    pub(crate) inputs: InputArgs,
-
-    /// recursively list all files in tree
-    #[clap(long)]
-    pub(crate) tree: bool,
-
-    /// show absolute paths instead of relative
-    #[clap(long)]
-    pub(crate) absolute: bool,
-
-    /// print top n schemas
-    #[clap(long)]
-    pub(crate) n_schemas: Option<usize>,
-
-    /// print example paths of each schema
-    #[clap(long)]
-    pub(crate) include_example_paths: bool,
-
-    /// sort schemas by row count, file count, or byte count
-    #[clap(long, default_value = "bytes")]
-    pub(crate) sort: String,
 }
 
 //

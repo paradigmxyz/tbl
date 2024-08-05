@@ -1,130 +1,6 @@
 use crate::TablError;
-use futures::stream::StreamExt;
 use std::collections::HashMap;
-use std::path::{Component, Path, PathBuf};
-
-/// count number of existing files
-pub async fn count_existing_files(paths: &[PathBuf]) -> usize {
-    const CONCURRENT_LIMIT: usize = 1000; // Adjust based on your system's capabilities
-
-    futures::stream::iter(paths)
-        .map(tokio::fs::metadata)
-        .buffer_unordered(CONCURRENT_LIMIT)
-        .filter_map(|result| async move {
-            match result {
-                Ok(metadata) => Some(metadata.is_file()),
-                Err(_) => None,
-            }
-        })
-        .fold(0, |acc, is_file| async move {
-            if is_file {
-                acc + 1
-            } else {
-                acc
-            }
-        })
-        .await
-}
-
-/// return tabular file paths within directory
-pub fn get_directory_tabular_files(dir_path: &Path) -> Result<Vec<PathBuf>, TablError> {
-    let mut tabular_files = Vec::new();
-
-    for entry in std::fs::read_dir(dir_path)? {
-        let entry = entry?;
-        let path = entry.path();
-
-        if path.is_file() && is_tabular_file(&path) {
-            tabular_files.push(path);
-        }
-    }
-
-    Ok(tabular_files)
-}
-
-/// get tabular files inside directory tree
-pub fn get_tree_tabular_files(dir_path: &std::path::Path) -> Result<Vec<PathBuf>, TablError> {
-    let mut tabular_files = Vec::new();
-    for entry in std::fs::read_dir(dir_path)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() && is_tabular_file(&path) {
-            tabular_files.push(path);
-        } else if path.is_dir() {
-            let sub_dir_files = get_tree_tabular_files(&path)?;
-            tabular_files.extend(sub_dir_files);
-        }
-    }
-    Ok(tabular_files)
-}
-
-/// return true if file_path has a tabular extension
-pub fn is_tabular_file(file_path: &std::path::Path) -> bool {
-    // let tabular_extensions = ["parquet", "csv"];
-    let tabular_extensions = ["parquet"];
-
-    if let Some(extension) = file_path.extension() {
-        let extension = extension.to_string_lossy().to_string();
-        tabular_extensions.contains(&extension.as_str())
-    } else {
-        false
-    }
-}
-
-/// get common prefix of paths
-pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TablError> {
-    if paths.is_empty() {
-        return Err(TablError::InputError("no paths given".to_string()));
-    }
-
-    let mut components_iter = paths.iter().map(|p| p.components());
-    let mut common_components: Vec<Component<'_>> = components_iter
-        .next()
-        .expect("There should be at least one path")
-        .collect();
-
-    for components in components_iter {
-        common_components = common_components
-            .iter()
-            .zip(components)
-            .take_while(|(a, b)| a == &b)
-            .map(|(a, _)| *a)
-            .collect();
-    }
-
-    Ok(common_components.iter().collect())
-}
-
-/// get file paths
-pub fn get_input_paths(
-    inputs: Option<Vec<PathBuf>>,
-    tree: bool,
-) -> Result<Vec<PathBuf>, TablError> {
-    // get paths
-    let raw_paths = match inputs {
-        Some(raw_paths) => raw_paths,
-        None => vec![std::env::current_dir()?],
-    };
-
-    // expand tree if specified
-    let mut paths: Vec<std::path::PathBuf> = vec![];
-    for raw_path in raw_paths.into_iter() {
-        if raw_path.is_dir() {
-            let sub_paths = if tree {
-                get_tree_tabular_files(&raw_path)?
-            } else {
-                get_directory_tabular_files(&raw_path)?
-            };
-            paths.extend(sub_paths);
-        } else if is_tabular_file(&raw_path) {
-            paths.push(raw_path);
-        } else {
-            println!("skipping non-tabular file {:?}", raw_path)
-        }
-    }
-
-    Ok(paths)
-}
+use std::path::PathBuf;
 
 /// output path spec
 #[derive(Default, Debug)]
@@ -352,7 +228,7 @@ pub fn get_output_paths(
         let metadata = std::fs::metadata(&input)?;
         if metadata.is_file() {
             // case 1: input is a file
-            let output = convert_file_path(
+            let output = super::manipulate::convert_file_path(
                 &input,
                 &output_dir,
                 &output_spec.file_prefix,
@@ -363,8 +239,8 @@ pub fn get_output_paths(
         } else if metadata.is_dir() {
             if !output_spec.tree {
                 // case 2: input is a directory, non-tree mode
-                for sub_input in get_directory_tabular_files(&input)?.into_iter() {
-                    let output = convert_file_path(
+                for sub_input in super::gather::get_directory_tabular_files(&input)?.into_iter() {
+                    let output = super::manipulate::convert_file_path(
                         &sub_input,
                         &output_dir,
                         &output_spec.file_prefix,
@@ -375,7 +251,7 @@ pub fn get_output_paths(
                 }
             } else {
                 // case 3: input is a directory, tree mode
-                for sub_input in get_tree_tabular_files(&input)?.into_iter() {
+                for sub_input in super::gather::get_tree_tabular_files(&input)?.into_iter() {
                     // use relative path of tree leaf, change root to output_dir if provided
                     let new_path = if let Some(output_dir) = output_dir.clone() {
                         let relative_path = sub_input.strip_prefix(&input)?.to_path_buf();
@@ -385,7 +261,7 @@ pub fn get_output_paths(
                     };
 
                     // change file prefix and postfix
-                    let output = convert_file_path(
+                    let output = super::manipulate::convert_file_path(
                         &new_path,
                         &None,
                         &output_spec.file_prefix,
@@ -430,93 +306,6 @@ pub fn get_output_paths(
     }
 
     Ok((return_inputs, return_outputs))
-}
-
-/// convert file path to new input
-fn convert_file_path(
-    input: &Path,
-    output_dir: &Option<PathBuf>,
-    file_prefix: &Option<String>,
-    file_postfix: &Option<String>,
-) -> Result<PathBuf, TablError> {
-    // change output directory
-    let output = match output_dir.as_ref() {
-        Some(output_dir) => {
-            let file_name = input
-                .file_name()
-                .ok_or_else(|| TablError::Error("Invalid input path".to_string()))?;
-            output_dir.join(file_name)
-        }
-        None => input.to_path_buf(),
-    };
-
-    if file_prefix.is_some() || file_postfix.is_some() {
-        let stem = output
-            .file_stem()
-            .ok_or_else(|| TablError::Error("Invalid output path".to_string()))?;
-        let extension = output.extension();
-
-        let new_filename = format!(
-            "{}{}{}{}",
-            file_prefix.as_deref().unwrap_or(""),
-            stem.to_string_lossy(),
-            file_postfix.as_deref().unwrap_or(""),
-            extension.map_or_else(String::new, |ext| format!(".{}", ext.to_string_lossy()))
-        );
-
-        Ok(output.with_file_name(new_filename))
-    } else {
-        Ok(output)
-    }
-}
-
-/// get output path
-pub fn get_output_path(
-    path: PathBuf,
-    output_dir: Option<String>,
-    root_dir: Option<String>,
-    output_prefix: Option<String>,
-    output_postfix: Option<String>,
-) -> PathBuf {
-    let path = Path::new(&path);
-
-    // Calculate new directory based on `root_dir` and `output_dir`
-    let new_dir = if let Some(output_dir) = output_dir {
-        if let Some(root_dir) = root_dir {
-            // if root_dir is specified, use the path relative to the root_dir
-            PathBuf::from(output_dir).join(path.strip_prefix(Path::new(&root_dir)).unwrap_or(path))
-        } else {
-            // if root_dir is not specified, just use the filename
-            PathBuf::from(output_dir).join(path.file_name().unwrap_or(path.as_os_str()))
-        }
-    } else {
-        path.to_path_buf()
-    };
-
-    // Calculate new filename based on `output_prefix` and `output_postfix`
-    let new_filename = {
-        let mut filename = path.file_stem().unwrap_or(path.as_os_str()).to_os_string();
-
-        // add output_prefix to filename if specified
-        if let Some(output_prefix) = output_prefix {
-            filename = format!("{}{}", output_prefix, filename.to_string_lossy()).into();
-        }
-
-        // add output_postfix to filename if specified
-        if let Some(output_postfix) = output_postfix {
-            filename = format!("{}{}", filename.to_string_lossy(), output_postfix).into();
-        }
-
-        // add file extension
-        if let Some(extension) = path.extension() {
-            filename.push(".");
-            filename.push(extension);
-        }
-
-        filename
-    };
-
-    new_dir.join(new_filename)
 }
 
 /*
