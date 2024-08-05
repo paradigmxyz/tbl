@@ -1,6 +1,7 @@
 use super::subcommands::*;
 use crate::TablCliError;
 use clap::{Parser, Subcommand};
+use color_print::cstr;
 use std::path::PathBuf;
 
 pub(crate) async fn run_cli() -> Result<(), TablCliError> {
@@ -12,13 +13,11 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
         Commands::Head(args) => head_command(args).await,
         Commands::Tail(args) => tail_command(args).await,
         Commands::Count(args) => count_command(args).await,
-        // edit
-        Commands::Insert(args) => insert_command(args).await,
-        Commands::Drop(args) => drop_command(args).await,
-        Commands::Cast(args) => cast_command(args),
+        // migrate
+        Commands::Migrate(args) => migrate_command(args).await,
+        // partition
         Commands::Merge(args) => merge_command(args).await,
         Commands::Partition(args) => partition_command(args),
-        Commands::Pl(args) => pl_command(args),
         // interactive
         Commands::Df(args) => df_command(args),
         Commands::Lf(args) => lf_command(args),
@@ -27,7 +26,43 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
 
 /// Utility for creating and managing MESC RPC configurations
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None, disable_help_subcommand = true, styles=get_styles())]
+#[clap(author, version, about, long_about = None, disable_help_subcommand = true, styles=get_styles(),
+    override_help = cstr!(
+        r#"
+<rgb(0,225,0)><bold>Usage:</bold></rgb(0,225,0)> <white><bold>tbl</bold></white> COMMAND [OPTIONS]
+
+<rgb(0,225,0)><bold>Display Commands</bold></rgb(0,225,0)>
+    <white><bold>ls</bold></white>                      list files
+    <white><bold>schema</bold></white>                  display schemas of files
+    <white><bold>cat</bold></white>                     display contents of files
+    <white><bold>head</bold></white>                    display first N rows of files
+    <white><bold>tail</bold></white>                    display last N rows of files
+    <white><bold>count</bold></white>                   display count statistics for files
+
+<rgb(0,225,0)><bold>Migration Commands</bold></rgb(0,225,0)>
+    <white><bold>migrate add</bold></white>             add column to files
+    <white><bold>migrate drop</bold></white>            drop column from files
+    <white><bold>migrate rename</bold></white>          rename column
+    <white><bold>migrate cast</bold></white>            change type of column
+
+<rgb(0,225,0)><bold>Partition Commands</bold></rgb(0,225,0)>
+    <white><bold>merge</bold></white>                   merge files into one file
+    <white><bold>partition</bold></white>               repartition files
+
+<rgb(0,225,0)><bold>Interactive Commands</bold></rgb(0,225,0)>
+    <white><bold>df</bold></white>                      load files as DataFrame in IPython session
+    <white><bold>lf</bold></white>                      load files as LazyFrame in IPython session
+
+<rgb(0,225,0)><bold>Specifying Input Files</bold></rgb(0,225,0)>
+    <white><bold>[PATH1 [PATH2 [...]]]</bold></white>   list of input paths, files or directories
+    <white><bold>--tree</bold></white>                  recursive scan all files in directories
+    <white><bold>[]</bold></white>                      default input is all files in current directory
+<rgb(100,100,100)>(every command takes these arguments to specify input files)</rgb(100,100,100)>
+"#
+    )
+    )
+]
+
 pub(crate) struct Cli {
     #[clap(subcommand)]
     pub(crate) command: Commands,
@@ -72,18 +107,16 @@ pub(crate) enum Commands {
     //
     // // edit commands
     //
-    /// Insert columns into tabular files
-    Insert(InsertArgs),
-    /// Drop columns from tabular files
-    Drop(DropArgs),
-    /// Cast columns of tabular files
-    Cast(CastArgs),
+    /// Migrate commands
+    #[command(subcommand)]
+    Migrate(MigrateArgs),
+    //
+    // // migrate commands
+    //
     /// Merge tabular files
     Merge(MergeArgs),
     /// Partition tabular files
     Partition(PartitionArgs),
-    /// Edit files using polars python syntax
-    Pl(PlArgs),
     //
     // // interactive commands
     //
@@ -101,7 +134,7 @@ pub(crate) enum Commands {
 pub(crate) struct InputArgs {
     /// input path(s) to use
     #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    pub(crate) paths: Option<Vec<PathBuf>>,
 
     /// recursively list all files in tree
     #[clap(long)]
@@ -110,17 +143,40 @@ pub(crate) struct InputArgs {
 
 #[derive(Parser)]
 pub(crate) struct CatArgs {
+    /// input path arguments
     #[clap(flatten)]
-    pub(crate) head_args: HeadArgs,
+    pub(crate) inputs: InputArgs,
 
+    /// columns to print
+    #[clap(long)]
+    pub(crate) columns: Option<Vec<String>>,
+
+    /// number of file names to print
+    #[clap(long)]
+    pub(crate) n: Option<usize>,
+
+    /// sort before showing preview
+    #[clap(short, long)]
+    pub(crate) sort: Option<Vec<String>>,
+
+    /// limit to this number of rows
+    #[clap(short, long)]
+    pub(crate) limit: Option<usize>,
+
+    /// offset before printing head
+    #[clap(short, long)]
+    pub(crate) offset: Option<usize>,
+
+    /// print tail instead of head
     #[clap(long)]
     pub(crate) tail: bool,
 }
 
 #[derive(Parser)]
 pub(crate) struct HeadArgs {
+    /// input path arguments
     #[clap(flatten)]
-    pub(crate) input_args: InputArgs,
+    pub(crate) inputs: InputArgs,
 
     /// columns to print
     #[clap(long)]
@@ -141,8 +197,9 @@ pub(crate) struct HeadArgs {
 
 #[derive(Parser)]
 pub(crate) struct TailArgs {
+    /// input path arguments
     #[clap(flatten)]
-    pub(crate) input_args: InputArgs,
+    pub(crate) inputs: InputArgs,
 
     /// columns to print
     #[clap(long)]
@@ -163,14 +220,19 @@ pub(crate) struct TailArgs {
 
 #[derive(Parser)]
 pub(crate) struct CountArgs {
-    /// columns to print
-    #[clap()]
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
+
+    /// columns to print values of
+    #[clap(short, long)]
     pub(crate) columns: Vec<String>,
 
-    #[clap(flatten)]
-    pub(crate) input_args: InputArgs,
+    /// show multi-column value columns
+    #[clap(short, long)]
+    pub(crate) group: Vec<String>,
 
-    /// number of file names to print
+    /// number of values to display
     #[clap(long)]
     pub(crate) n: Option<usize>,
 }
@@ -178,9 +240,9 @@ pub(crate) struct CountArgs {
 /// Arguments for the `ls` subcommand
 #[derive(Parser)]
 pub(crate) struct LsArgs {
-    /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
 
     /// recursively list all files in tree
     #[clap(long)]
@@ -206,9 +268,9 @@ pub(crate) struct LsArgs {
 /// Arguments for the `schema` subcommand
 #[derive(Parser)]
 pub(crate) struct SchemaArgs {
-    /// input path(s) to use
-    #[clap()]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
 
     /// recursively list all files in tree
     #[clap(long)]
@@ -231,18 +293,29 @@ pub(crate) struct SchemaArgs {
     pub(crate) sort: String,
 }
 
+//
+// // migrate commands
+//
+
+#[derive(Subcommand)]
+#[command()]
+pub(crate) enum MigrateArgs {
+    /// Insert columns into tabular files
+    Insert(InsertArgs),
+    /// Drop columns from tabular files
+    Drop(DropArgs),
+    /// Cast columns of tabular files
+    Cast(CastArgs),
+}
+
 #[derive(Parser)]
 pub(crate) struct InsertArgs {
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
+
     /// column specifications, in pairs of COLUMN_NAME DTYPE
     pub(crate) new_columns: Vec<String>,
-
-    /// input path(s) to use
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub(crate) inputs: Option<Vec<String>>,
-
-    /// recursively list all files in tree
-    #[clap(long)]
-    pub(crate) tree: bool,
 
     /// output directory to write modified files
     #[clap(long)]
@@ -269,24 +342,16 @@ pub(crate) struct InsertArgs {
     pub(crate) output_postfix: Option<String>,
 }
 
-//
-// // edit commands
-//
-
 /// Arguments for the `drop` subcommand
 #[derive(Parser)]
 pub(crate) struct DropArgs {
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
+
     /// columns to drop
     #[clap()]
     pub(crate) columns: Vec<String>,
-
-    /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
-
-    /// recursively list all files in tree
-    #[clap(long)]
-    pub(crate) tree: bool,
 
     /// confirm that files should be edited
     #[clap(long)]
@@ -312,21 +377,25 @@ pub(crate) struct DropArgs {
 /// Arguments for the `cast` subcommand
 #[derive(Parser)]
 pub(crate) struct CastArgs {
-    /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
 }
+
+//
+// // partition commands
+//
 
 /// Arguments for the `merge` subcommand
 #[derive(Parser)]
 pub(crate) struct MergeArgs {
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
+
     /// output path to use
     #[clap()]
     pub(crate) output_path: PathBuf,
-
-    /// input path(s) to use
-    #[clap()]
-    pub(crate) inputs: Vec<PathBuf>,
 
     /// keep original files after merging
     #[clap(long)]
@@ -340,17 +409,17 @@ pub(crate) struct MergeArgs {
 /// Arguments for the `partition` subcommand
 #[derive(Parser)]
 pub(crate) struct PartitionArgs {
-    /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
-}
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
 
-/// Arguments for the `pl` subcommand
-#[derive(Parser)]
-pub(crate) struct PlArgs {
-    /// input path(s) to use
-    #[clap(short, long)]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
+    /// keep original files after merging
+    #[clap(long)]
+    pub(crate) keep: bool,
+
+    /// confirm merge
+    #[clap(long)]
+    pub(crate) confirm: bool,
 }
 
 //
@@ -360,19 +429,15 @@ pub(crate) struct PlArgs {
 /// Arguments for the `df` subcommand
 #[derive(Parser)]
 pub(crate) struct DfArgs {
-    /// input path(s) to use
-    #[clap()]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
-
-    /// use tree of inputs
-    #[clap(long)]
-    pub(crate) tree: bool,
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
 
     /// python executable to use
     #[clap(short, long)]
     pub(crate) executable: Option<String>,
 
-    /// load lazily
+    /// load lazily as LazyFrame instead of DataFrame
     #[clap(short, long)]
     pub(crate) lazy: bool,
 }
@@ -380,13 +445,9 @@ pub(crate) struct DfArgs {
 /// Arguments for the `lf` subcommand
 #[derive(Parser)]
 pub(crate) struct LfArgs {
-    /// input path(s) to use
-    #[clap()]
-    pub(crate) inputs: Option<Vec<PathBuf>>,
-
-    /// use tree of inputs
-    #[clap(long)]
-    pub(crate) tree: bool,
+    /// input path arguments
+    #[clap(flatten)]
+    pub(crate) inputs: InputArgs,
 
     /// python executable to use
     #[clap(short, long)]
