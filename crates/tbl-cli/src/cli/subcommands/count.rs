@@ -3,7 +3,7 @@ use polars::prelude::*;
 
 pub(crate) async fn count_command(args: CountArgs) -> Result<(), TablCliError> {
     println!("count");
-    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree)?;
+    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree, true)?;
     let paths = Arc::from(paths.into_boxed_slice());
     let scan_args = polars::prelude::ScanArgsParquet::default();
     let lf = LazyFrame::scan_parquet_files(paths, scan_args)?;

@@ -62,4 +62,3 @@ pub fn convert_file_path(
         Ok(output)
     }
 }
-

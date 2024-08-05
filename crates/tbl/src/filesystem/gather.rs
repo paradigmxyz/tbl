@@ -69,4 +69,3 @@ pub async fn count_existing_files(paths: &[PathBuf]) -> usize {
         })
         .await
 }
-

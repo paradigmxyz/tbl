@@ -4,7 +4,7 @@ use crate::{MergeArgs, TablCliError};
 pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
 
-    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree)?;
+    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree, true)?;
 
     // check inputs
     if paths.len() <= 1 {

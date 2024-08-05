@@ -5,6 +5,7 @@ use std::path::PathBuf;
 pub fn get_input_paths(
     inputs: Option<Vec<PathBuf>>,
     tree: bool,
+    sort: bool,
 ) -> Result<Vec<PathBuf>, TablError> {
     // get paths
     let raw_paths = match inputs {
@@ -29,6 +30,10 @@ pub fn get_input_paths(
         }
     }
 
+    // sort
+    if sort {
+        paths.sort()
+    }
+
     Ok(paths)
 }
-
