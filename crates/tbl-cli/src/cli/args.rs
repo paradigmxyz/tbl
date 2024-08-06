@@ -7,6 +7,11 @@ use std::path::PathBuf;
 pub(crate) async fn run_cli() -> Result<(), TablCliError> {
     let args = Cli::parse();
 
+    if args.version {
+        println!("{}", env!("GIT_DESCRIPTION"));
+        std::process::exit(0);
+    }
+
     match args.command {
         Some(Subcommands::Ls(args)) => ls_command(args).await,
         Some(Subcommands::Schema(args)) => schema_command(args).await,
@@ -20,7 +25,6 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
 #[derive(Clone, Parser)]
 #[clap(
     author,
-    version = "0.1",
     about = cstr!("<white><bold>tbl</bold></white> is a tool for reading and editing tabular data files"),
     override_usage = cstr!("<white><bold>tbl</bold></white> has two modes
 1. Summary mode: <white><bold>tbl [ls | schema | schemas] [SUMMARY_OPTIONS]</bold></white>
@@ -47,8 +51,8 @@ pub(crate) struct Cli {
     help: Option<bool>,
 
     /// display version
-    #[clap(short = 'V', long, action = clap::ArgAction::Version, help_heading = "General Options")]
-    version: Option<bool>,
+    #[clap(short = 'V', long, help_heading = "General Options")]
+    version: bool,
 
     #[clap(flatten)]
     data_args: DataArgs,

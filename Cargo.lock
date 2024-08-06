@@ -512,6 +512,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "built"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "236e6289eda5a812bc6b53c3b024039382a2895fbbeef2d748b2931546d392c4"
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2969,6 +2975,7 @@ name = "tbl-cli"
 version = "0.1.0"
 dependencies = [
  "anstyle",
+ "built",
  "clap",
  "color-print",
  "inquire",
