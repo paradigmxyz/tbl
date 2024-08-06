@@ -1,6 +1,6 @@
 [package]
 name = "tbl-cli"
-description = "cli tool for reading and modifying tabular files"
+description = "tbl is a tool for reading and editing tabular data files"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,7 +12,6 @@ name = "tbl"
 path = "src/main.rs"
 
 [dependencies]
-arrow = { workspace = true }
 clap = { version = "4.4.8", features = ["derive"] }
 tokio = { workspace = true }
 thiserror = { workspace = true }

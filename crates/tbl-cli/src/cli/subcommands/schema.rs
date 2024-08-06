@@ -10,7 +10,7 @@ use toolstr::Colorize;
 
 pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError> {
     // get schemas
-    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree, true)?;
+    let paths = tbl::filesystem::get_input_paths(args.paths, args.tree, true)?;
     let summaries = tbl::parquet::get_parquet_summaries(&paths).await?;
     let ref_summaries: Vec<&tbl::parquet::TabularSummary> = summaries.iter().collect();
     let by_schema = summarize_by_schema(ref_summaries.as_slice())?;
@@ -32,7 +32,7 @@ pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError>
 
     // collect example paths for each schema
     let n_example_paths = 3;
-    let example_paths = if args.include_example_paths {
+    let example_paths = if args.examples {
         let mut example_paths = HashMap::<Arc<Schema>, Vec<PathBuf>>::new();
         for (path, summary) in paths.iter().zip(summaries.iter()) {
             example_paths
@@ -46,7 +46,7 @@ pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError>
     };
 
     // decide how many schemas to show
-    let n_to_show = std::cmp::min(args.n_schemas.unwrap_or(3), by_schema.len());
+    let n_to_show = std::cmp::min(args.n.unwrap_or(3), by_schema.len());
 
     // decide what to sort by
     let sort_by = match args.sort.as_str() {

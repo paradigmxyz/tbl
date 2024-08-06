@@ -1,27 +1,29 @@
 use crate::{LsArgs, TablCliError};
 use toolstr::Colorize;
 
-pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
+pub(crate) async fn ls_command(ls_args: LsArgs) -> Result<(), TablCliError> {
     // get paths
-    let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree, true)?;
+    let paths = tbl::filesystem::get_input_paths(ls_args.paths, ls_args.tree, true)?;
 
     if paths.is_empty() {
         println!("[no tabular paths]");
-        return Ok(())
+        return Ok(());
     }
 
     // print file names
-    print_file_names(&paths, args.n, args.absolute)?;
+    print_file_names(&paths, ls_args.n, ls_args.absolute)?;
 
     // print stats
-    if !args.no_stats {
-        print_stats(&paths).await?;
-    };
+    print_stats(&paths).await?;
 
     Ok(())
 }
 
-fn print_file_names(paths: &[std::path::PathBuf], n: Option<usize>, absolute: bool) -> Result<(), TablCliError> {
+fn print_file_names(
+    paths: &[std::path::PathBuf],
+    n: Option<usize>,
+    absolute: bool,
+) -> Result<(), TablCliError> {
     // clear common prefix
     let display_paths = if absolute {
         paths.to_vec()
@@ -69,7 +71,6 @@ fn print_file_names(paths: &[std::path::PathBuf], n: Option<usize>, absolute: bo
 }
 
 async fn print_stats(paths: &[std::path::PathBuf]) -> Result<(), TablCliError> {
-
     // get total file size
     let mut total_size: u64 = 0;
     for path in paths.iter() {
