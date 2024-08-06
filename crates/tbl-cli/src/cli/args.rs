@@ -152,6 +152,10 @@ pub(crate) struct LsArgs {
     #[clap(short, long)]
     pub(crate) n: Option<usize>,
 
+    /// skip summary stats
+    #[clap(long)]
+    pub(crate) no_stats: bool,
+
     /// show absolute paths instead of relative
     #[clap(short, long)]
     pub(crate) absolute: bool,

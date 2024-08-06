@@ -5,27 +5,37 @@ pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
     // get paths
     let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree, true)?;
 
+    if paths.is_empty() {
+        println!("[no tabular paths]");
+        return Ok(())
+    }
+
+    // print file names
+    print_file_names(&paths, args.n, args.absolute)?;
+
+    // print stats
+    if !args.no_stats {
+        print_stats(&paths).await?;
+    };
+
+    Ok(())
+}
+
+fn print_file_names(paths: &[std::path::PathBuf], n: Option<usize>, absolute: bool) -> Result<(), TablCliError> {
     // clear common prefix
-    let paths = if args.absolute {
-        paths
+    let display_paths = if absolute {
+        paths.to_vec()
     } else {
-        let common_prefix = tbl::filesystem::get_common_prefix(&paths)?;
+        let common_prefix = tbl::filesystem::get_common_prefix(paths)?;
         let mut new_paths = Vec::new();
-        for path in paths {
+        for path in paths.iter() {
             new_paths.push(path.strip_prefix(&common_prefix)?.to_owned())
         }
         new_paths
     };
 
-    // get total file size
-    let mut total_size: u64 = 0;
-    for path in paths.iter() {
-        let metadata = std::fs::metadata(path)?;
-        total_size += metadata.len();
-    }
-
     // decide number of files to print
-    let n_print = match args.n {
+    let n_print = match n {
         Some(n) => n,
         None => {
             if let Some((_, height)) = term_size::dimensions() {
@@ -41,7 +51,7 @@ pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
     };
 
     // print out file names or paths
-    for path in paths.iter().take(n_print) {
+    for path in display_paths.iter().take(n_print) {
         println!("{}", path.to_string_lossy().purple())
     }
     if n_print < paths.len() {
@@ -53,6 +63,18 @@ pub(crate) async fn ls_command(args: LsArgs) -> Result<(), TablCliError> {
             )
             .truecolor(150, 150, 150)
         );
+    }
+
+    Ok(())
+}
+
+async fn print_stats(paths: &[std::path::PathBuf]) -> Result<(), TablCliError> {
+
+    // get total file size
+    let mut total_size: u64 = 0;
+    for path in paths.iter() {
+        let metadata = std::fs::metadata(path)?;
+        total_size += metadata.len();
     }
 
     // get row counts
