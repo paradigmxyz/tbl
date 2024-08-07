@@ -165,14 +165,22 @@ fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TablCliError> 
 fn save_lf_to_disk(
     lf: LazyFrame,
     output_path: Option<PathBuf>,
-    _args: &DataArgs,
+    args: &DataArgs,
 ) -> Result<(), TablCliError> {
     let output_path = match output_path {
         Some(output_path) => output_path,
         None => return Err(TablCliError::Error("no output path specified".to_string())),
     };
-    let write_options = ParquetWriteOptions::default();
-    lf.sink_parquet(output_path, write_options)?;
+    if output_path.ends_with(".csv") | args.csv {
+        let options = CsvWriterOptions::default();
+        lf.sink_csv(output_path, options)?;
+    } else if output_path.ends_with(".json") | args.json {
+        let options = JsonWriterOptions::default();
+        lf.sink_json(output_path, options)?;
+    } else {
+        let options = ParquetWriteOptions::default();
+        lf.sink_parquet(output_path, options)?;
+    };
     Ok(())
 }
 
