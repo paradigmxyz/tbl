@@ -12,7 +12,7 @@ pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     let io = gather_inputs_and_outputs(&output_mode, &args)?;
 
     // print data summary
-    crate::summary::print_summary(&io, &output_mode, &args)?;
+    crate::summary::print_summary(&io, &output_mode, &args).await?;
 
     // exit early as needed
     exit_early_if_needed(args.dry, args.confirm, &output_mode, &io);

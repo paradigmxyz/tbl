@@ -2,21 +2,26 @@ use crate::{DataArgs, OutputMode, TblCliError};
 use std::path::PathBuf;
 use tbl::formats::{print_bullet, print_header};
 
-pub(crate) fn print_summary(
+pub(crate) async fn print_summary(
     inputs_and_outputs: &[(Vec<PathBuf>, Option<PathBuf>)],
     output_mode: &OutputMode,
     args: &DataArgs,
 ) -> Result<(), TblCliError> {
     let mut n_input_files = 0;
+    let mut all_input_files = Vec::new();
     let mut _n_output_files = 0;
     for (input_files, output_file) in inputs_and_outputs.iter() {
         n_input_files += input_files.len();
+        all_input_files.extend(input_files.iter().map(|p| p.as_path()));
         if output_file.is_some() {
             _n_output_files += 1;
         }
     }
 
-    print_input_summary(n_input_files, args);
+    // compute total size of input files
+    let n_input_bytes = tbl::filesystem::get_total_bytes_of_files(all_input_files).await?;
+
+    print_input_summary(n_input_files, n_input_bytes, args);
     println!();
     println!();
     print_transform_summary(args);
@@ -26,10 +31,10 @@ pub(crate) fn print_summary(
     Ok(())
 }
 
-fn print_input_summary(n_input_files: usize, _args: &DataArgs) {
+fn print_input_summary(n_input_files: usize, n_input_bytes: u64, _args: &DataArgs) {
     print_header("Inputs");
     print_bullet("n_input_files", n_input_files.to_string());
-    // println!("- n_input_bytes: {}", 0);
+    print_bullet("n_input_bytes", tbl::formats::format_bytes(n_input_bytes));
 }
 
 fn print_transform_summary(args: &DataArgs) {
