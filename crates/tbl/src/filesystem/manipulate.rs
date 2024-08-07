@@ -1,10 +1,10 @@
-use crate::TablError;
+use crate::TblError;
 use std::path::{Component, Path, PathBuf};
 
 /// get common prefix of paths
-pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TablError> {
+pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TblError> {
     if paths.is_empty() {
-        return Err(TablError::InputError("no paths given".to_string()));
+        return Err(TblError::InputError("no paths given".to_string()));
     }
 
     let mut components_iter = paths.iter().map(|p| p.components());
@@ -31,13 +31,13 @@ pub fn convert_file_path(
     output_dir: &Option<PathBuf>,
     file_prefix: &Option<String>,
     file_postfix: &Option<String>,
-) -> Result<PathBuf, TablError> {
+) -> Result<PathBuf, TblError> {
     // change output directory
     let output = match output_dir.as_ref() {
         Some(output_dir) => {
             let file_name = input
                 .file_name()
-                .ok_or_else(|| TablError::Error("Invalid input path".to_string()))?;
+                .ok_or_else(|| TblError::Error("Invalid input path".to_string()))?;
             output_dir.join(file_name)
         }
         None => input.to_path_buf(),
@@ -46,7 +46,7 @@ pub fn convert_file_path(
     if file_prefix.is_some() || file_postfix.is_some() {
         let stem = output
             .file_stem()
-            .ok_or_else(|| TablError::Error("Invalid output path".to_string()))?;
+            .ok_or_else(|| TblError::Error("Invalid output path".to_string()))?;
         let extension = output.extension();
 
         let new_filename = format!(

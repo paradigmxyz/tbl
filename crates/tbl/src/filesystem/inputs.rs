@@ -1,4 +1,4 @@
-use crate::TablError;
+use crate::TblError;
 use std::path::PathBuf;
 
 /// get file paths
@@ -6,7 +6,7 @@ pub fn get_input_paths(
     inputs: &Option<Vec<PathBuf>>,
     tree: bool,
     sort: bool,
-) -> Result<Vec<PathBuf>, TablError> {
+) -> Result<Vec<PathBuf>, TblError> {
     // get paths
     let raw_paths = match inputs {
         Some(raw_paths) => raw_paths.to_vec(),

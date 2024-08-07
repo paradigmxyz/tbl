@@ -1,4 +1,4 @@
-use crate::TablError;
+use crate::TblError;
 use arrow::array::{ArrayRef, StringArray};
 use arrow::array::{BinaryArray, BooleanArray, UInt32Array, UInt64Array};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -27,9 +27,9 @@ pub async fn insert_parquets_columns(
     index: Option<Vec<usize>>,
     batch_size: usize,
     max_concurrent: usize,
-) -> Result<(), TablError> {
+) -> Result<(), TblError> {
     if inputs.len() != outputs.len() {
-        return Err(TablError::Error(
+        return Err(TblError::Error(
             "Number of inputs must match number of outputs".to_string(),
         ));
     }
@@ -48,7 +48,7 @@ pub async fn insert_parquets_columns(
                 let _permit = sem_clone
                     .acquire()
                     .await
-                    .map_err(|e| TablError::Error(e.to_string()))?;
+                    .map_err(|e| TblError::Error(e.to_string()))?;
 
                 insert_parquet_columns(
                     input,
@@ -83,16 +83,16 @@ pub async fn insert_parquet_columns(
     default_values: Option<Vec<String>>,
     index: Option<Vec<usize>>,
     batch_size: usize,
-) -> Result<(), TablError> {
+) -> Result<(), TblError> {
     if column_names.len() != column_dtypes.len() {
-        return Err(TablError::Error(
+        return Err(TblError::Error(
             "Column names and dtypes must have the same length".to_string(),
         ));
     }
 
     if let Some(ref default_values) = default_values {
         if default_values.len() != column_names.len() {
-            return Err(TablError::Error(
+            return Err(TblError::Error(
                 "Default values must have the same length as column names and dtypes".to_string(),
             ));
         }
@@ -100,7 +100,7 @@ pub async fn insert_parquet_columns(
 
     if let Some(ref index_values) = index {
         if index_values.len() != column_names.len() {
-            return Err(TablError::Error(
+            return Err(TblError::Error(
                 "Index values must have the same length as column names and dtypes".to_string(),
             ));
         }
@@ -164,59 +164,41 @@ fn create_new_column(
     len: usize,
     dtype: &DataType,
     default_value: Option<&str>,
-) -> Result<ArrayRef, TablError> {
+) -> Result<ArrayRef, TblError> {
     match dtype {
         DataType::Int32 => {
             let value = default_value
-                .map(|v| {
-                    v.parse::<i32>()
-                        .map_err(|e| TablError::Error(e.to_string()))
-                })
+                .map(|v| v.parse::<i32>().map_err(|e| TblError::Error(e.to_string())))
                 .transpose()?;
             Ok(Arc::new(arrow::array::Int32Array::from(vec![value; len])))
         }
         DataType::Int64 => {
             let value = default_value
-                .map(|v| {
-                    v.parse::<i64>()
-                        .map_err(|e| TablError::Error(e.to_string()))
-                })
+                .map(|v| v.parse::<i64>().map_err(|e| TblError::Error(e.to_string())))
                 .transpose()?;
             Ok(Arc::new(arrow::array::Int64Array::from(vec![value; len])))
         }
         DataType::UInt32 => {
             let value = default_value
-                .map(|v| {
-                    v.parse::<u32>()
-                        .map_err(|e| TablError::Error(e.to_string()))
-                })
+                .map(|v| v.parse::<u32>().map_err(|e| TblError::Error(e.to_string())))
                 .transpose()?;
             Ok(Arc::new(UInt32Array::from(vec![value; len])))
         }
         DataType::UInt64 => {
             let value = default_value
-                .map(|v| {
-                    v.parse::<u64>()
-                        .map_err(|e| TablError::Error(e.to_string()))
-                })
+                .map(|v| v.parse::<u64>().map_err(|e| TblError::Error(e.to_string())))
                 .transpose()?;
             Ok(Arc::new(UInt64Array::from(vec![value; len])))
         }
         DataType::Float32 => {
             let value = default_value
-                .map(|v| {
-                    v.parse::<f32>()
-                        .map_err(|e| TablError::Error(e.to_string()))
-                })
+                .map(|v| v.parse::<f32>().map_err(|e| TblError::Error(e.to_string())))
                 .transpose()?;
             Ok(Arc::new(arrow::array::Float32Array::from(vec![value; len])))
         }
         DataType::Float64 => {
             let value = default_value
-                .map(|v| {
-                    v.parse::<f64>()
-                        .map_err(|e| TablError::Error(e.to_string()))
-                })
+                .map(|v| v.parse::<f64>().map_err(|e| TblError::Error(e.to_string())))
                 .transpose()?;
             Ok(Arc::new(arrow::array::Float64Array::from(vec![value; len])))
         }
@@ -228,9 +210,9 @@ fn create_new_column(
             let value = default_value
                 .map(|v| {
                     if let Some(stripped) = v.strip_prefix("0x") {
-                        hex::decode(stripped).map_err(|e| TablError::Error(e.to_string()))
+                        hex::decode(stripped).map_err(|e| TblError::Error(e.to_string()))
                     } else {
-                        Err(TablError::Error(
+                        Err(TblError::Error(
                             "Binary default value must start with '0x'".to_string(),
                         ))
                     }
@@ -246,13 +228,13 @@ fn create_new_column(
             let value = default_value
                 .map(|v| {
                     v.parse::<bool>()
-                        .map_err(|e| TablError::Error(e.to_string()))
+                        .map_err(|e| TblError::Error(e.to_string()))
                 })
                 .transpose()?;
             Ok(Arc::new(BooleanArray::from(vec![value; len])))
         }
         // Add more data types as needed
-        _ => Err(TablError::Error(format!(
+        _ => Err(TblError::Error(format!(
             "Unsupported data type: {:?}",
             dtype
         ))),

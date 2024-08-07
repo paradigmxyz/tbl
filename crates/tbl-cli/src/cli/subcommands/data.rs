@@ -1,4 +1,4 @@
-use crate::{DataArgs, TablCliError};
+use crate::{DataArgs, TblCliError};
 use polars::prelude::*;
 use std::path::PathBuf;
 use tbl::filesystem::{get_input_paths, get_output_paths, OutputPathSpec};
@@ -21,7 +21,7 @@ struct OutputFrame {
     lf: LazyFrame,
 }
 
-pub(crate) async fn data_command(args: DataArgs) -> Result<(), TablCliError> {
+pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     // decide output mode
     let output_mode = decide_output_mode(&args)?;
 
@@ -48,7 +48,7 @@ pub(crate) async fn data_command(args: DataArgs) -> Result<(), TablCliError> {
     Ok(())
 }
 
-fn decide_output_mode(args: &DataArgs) -> Result<OutputMode, TablCliError> {
+fn decide_output_mode(args: &DataArgs) -> Result<OutputMode, TblCliError> {
     match (
         args.inplace,
         &args.output_file,
@@ -64,7 +64,7 @@ fn decide_output_mode(args: &DataArgs) -> Result<OutputMode, TablCliError> {
         (false, None, _, Some(_), false, false) => Ok(OutputMode::Partition),
         (false, None, None, None, true, false) => Ok(OutputMode::InteractiveDf),
         (false, None, None, None, false, true) => Ok(OutputMode::InteractiveLf),
-        _ => Err(TablCliError::Error(
+        _ => Err(TblCliError::Error(
             "can only specify one output mode".to_string(),
         )),
     }
@@ -73,7 +73,7 @@ fn decide_output_mode(args: &DataArgs) -> Result<OutputMode, TablCliError> {
 fn gather_inputs_and_outputs(
     output_mode: &OutputMode,
     args: &DataArgs,
-) -> Result<Vec<InputsOutput>, TablCliError> {
+) -> Result<Vec<InputsOutput>, TblCliError> {
     let mut io = Vec::new();
     match output_mode {
         OutputMode::PrintToStdout
@@ -122,7 +122,7 @@ fn print_summary(
     inputs_and_outputs: &[InputsOutput],
     output_mode: &OutputMode,
     _args: &DataArgs,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     let mut n_input_files = 0;
     let mut _n_output_files = 0;
     for (input_files, output_file) in inputs_and_outputs.iter() {
@@ -159,7 +159,7 @@ fn print_summary(
     Ok(())
 }
 
-fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<(), TablCliError> {
+fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<(), TblCliError> {
     if args.dry {
         println!("[dry run, exiting]");
         std::process::exit(0);
@@ -175,7 +175,7 @@ fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<()
         if let Ok(true) = inquire::Confirm::new(prompt).with_default(false).prompt() {
             Ok(())
         } else {
-            Err(TablCliError::Error("exiting".to_string()))
+            Err(TblCliError::Error("exiting".to_string()))
         }
     } else {
         Ok(())
@@ -187,7 +187,7 @@ fn process_io(
     output_path: Option<PathBuf>,
     output_mode: &OutputMode,
     args: &DataArgs,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     // create lazy frame
     let lf = create_lazyframe(&input_paths)?;
 
@@ -206,13 +206,13 @@ fn process_io(
     }
 }
 
-fn create_lazyframe(paths: &[PathBuf]) -> Result<LazyFrame, TablCliError> {
+fn create_lazyframe(paths: &[PathBuf]) -> Result<LazyFrame, TblCliError> {
     let scan_args = polars::prelude::ScanArgsParquet::default();
     let arc_paths = Arc::from(paths.to_vec().into_boxed_slice());
     Ok(LazyFrame::scan_parquet_files(arc_paths, scan_args)?)
 }
 
-fn apply_transformations(lf: LazyFrame, _args: &DataArgs) -> Result<LazyFrame, TablCliError> {
+fn apply_transformations(lf: LazyFrame, _args: &DataArgs) -> Result<LazyFrame, TblCliError> {
     Ok(lf)
 }
 
@@ -220,7 +220,7 @@ fn apply_transformations(lf: LazyFrame, _args: &DataArgs) -> Result<LazyFrame, T
 // // output functions
 //
 
-fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TablCliError> {
+fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TblCliError> {
     // match (args.csv, args.json) {
     //     (false, false) => {}
     //     (true, false) => {}
@@ -236,10 +236,10 @@ fn save_lf_to_disk(
     lf: LazyFrame,
     output_path: Option<PathBuf>,
     args: &DataArgs,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     let output_path = match output_path {
         Some(output_path) => output_path,
-        None => return Err(TablCliError::Error("no output path specified".to_string())),
+        None => return Err(TblCliError::Error("no output path specified".to_string())),
     };
     if output_path.ends_with(".csv") | args.csv {
         let options = CsvWriterOptions::default();
@@ -258,8 +258,8 @@ fn partition_data(
     _lf: LazyFrame,
     _input_paths: Vec<PathBuf>,
     _args: &DataArgs,
-) -> Result<(), TablCliError> {
-    Err(TablCliError::Error(
+) -> Result<(), TblCliError> {
+    Err(TblCliError::Error(
         "partition functionality not implemented".to_string(),
     ))
 }
@@ -268,6 +268,6 @@ fn enter_interactive_session(
     _lf: LazyFrame,
     input_paths: Vec<PathBuf>,
     args: &DataArgs,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     crate::python::load_df_interactive(input_paths, args.lf, args.executable.clone())
 }

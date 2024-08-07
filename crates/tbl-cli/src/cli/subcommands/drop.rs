@@ -1,9 +1,9 @@
 use crate::styles::FontStyle;
-use crate::{DropArgs, TablCliError};
+use crate::{DropArgs, TblCliError};
 use std::path::PathBuf;
 use toolstr::Colorize;
 
-pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
+pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TblCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
 
     // determine which paths to use
@@ -27,7 +27,7 @@ pub(crate) async fn drop_command(args: DropArgs) -> Result<(), TablCliError> {
                     column,
                     input.to_string_lossy()
                 );
-                return Err(TablCliError::Error(msg));
+                return Err(TblCliError::Error(msg));
             }
         }
     }
@@ -58,7 +58,7 @@ async fn print_drop_summary(
     args: &DropArgs,
     inputs: &[PathBuf],
     outputs: &[PathBuf],
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     // print files
     let n_show_files = 10;
     println!("files:");
@@ -85,7 +85,7 @@ async fn print_drop_summary(
     let first_column = if let Some(first_column) = args.columns.first() {
         first_column.clone()
     } else {
-        return Err(TablCliError::Arg(
+        return Err(TblCliError::Arg(
             "must specify column(s) to drop".to_string(),
         ));
     };

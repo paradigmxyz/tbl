@@ -1,9 +1,9 @@
 use crate::styles::FontStyle;
-use crate::{InsertArgs, TablCliError};
+use crate::{InsertArgs, TblCliError};
 use arrow::datatypes::DataType;
 use std::path::PathBuf;
 
-pub(crate) async fn insert_command(args: InsertArgs) -> Result<(), TablCliError> {
+pub(crate) async fn insert_command(args: InsertArgs) -> Result<(), TblCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
 
     // parse inputs
@@ -48,9 +48,9 @@ pub(crate) async fn insert_command(args: InsertArgs) -> Result<(), TablCliError>
     Ok(())
 }
 
-fn parse_user_dtypes(input: Vec<String>) -> Result<(Vec<String>, Vec<DataType>), TablCliError> {
+fn parse_user_dtypes(input: Vec<String>) -> Result<(Vec<String>, Vec<DataType>), TblCliError> {
     if input.len() % 2 != 0 {
-        return Err(TablCliError::Error(
+        return Err(TblCliError::Error(
             "Input vector must have an even number of elements".to_string(),
         ));
     }
@@ -77,7 +77,7 @@ fn parse_user_dtypes(input: Vec<String>) -> Result<(Vec<String>, Vec<DataType>),
             "binary" => DataType::Binary,
             "bool" | "boolean" => DataType::Boolean,
             _ => {
-                return Err(TablCliError::Error(format!(
+                return Err(TblCliError::Error(format!(
                     "Unsupported data type: {}",
                     chunk[1]
                 )))
@@ -94,7 +94,7 @@ fn parse_user_dtypes(input: Vec<String>) -> Result<(Vec<String>, Vec<DataType>),
 fn format_path(
     path: &std::path::Path,
     relpath: &Option<std::path::PathBuf>,
-) -> Result<String, TablCliError> {
+) -> Result<String, TblCliError> {
     let path = if let Some(relpath) = relpath {
         path.strip_prefix(relpath)?
     } else {
@@ -108,7 +108,7 @@ fn print_summary(
     inputs: &[PathBuf],
     column_names: &[String],
     column_dtypes: &[DataType],
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     // print summary
     let column_word = if column_names.len() == 1 {
         "column"

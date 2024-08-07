@@ -1,9 +1,9 @@
-use crate::TablError;
+use crate::TblError;
 use futures::stream::StreamExt;
 use std::path::{Path, PathBuf};
 
 /// return tabular file paths within directory
-pub fn get_directory_tabular_files(dir_path: &Path) -> Result<Vec<PathBuf>, TablError> {
+pub fn get_directory_tabular_files(dir_path: &Path) -> Result<Vec<PathBuf>, TblError> {
     let mut tabular_files = Vec::new();
 
     for entry in std::fs::read_dir(dir_path)? {
@@ -19,7 +19,7 @@ pub fn get_directory_tabular_files(dir_path: &Path) -> Result<Vec<PathBuf>, Tabl
 }
 
 /// get tabular files inside directory tree
-pub fn get_tree_tabular_files(dir_path: &std::path::Path) -> Result<Vec<PathBuf>, TablError> {
+pub fn get_tree_tabular_files(dir_path: &std::path::Path) -> Result<Vec<PathBuf>, TblError> {
     let mut tabular_files = Vec::new();
     for entry in std::fs::read_dir(dir_path)? {
         let entry = entry?;

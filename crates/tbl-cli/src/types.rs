@@ -1,15 +1,15 @@
-use tbl::TablError;
+use tbl::TblError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub(crate) enum TablCliError {
+pub(crate) enum TblCliError {
     /// Error wrapper for standard IO errors.
     #[error(transparent)]
     IO(#[from] std::io::Error),
 
     /// Error wrapper for standard IO errors.
     #[error(transparent)]
-    Tabl(#[from] TablError),
+    Tbl(#[from] TblError),
 
     /// Error caused by arguments
     #[error("Argument error: {0}")]

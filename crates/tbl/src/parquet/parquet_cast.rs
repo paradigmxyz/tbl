@@ -16,11 +16,11 @@ pub async fn cast_parquet_columns(
     _output_path: PathBuf,
     _columns_to_cast: HashMap<String, DataType>,
     _batch_size: usize,
-) -> Result<(), crate::TablError> {
+) -> Result<(), crate::TblError> {
     panic!("not implemented")
     // // Create a LazyFrame from the input Parquet file
     // let lf = LazyFrame::scan_parquet(
-    //     input_path.to_str().ok_or_else(|| crate::TablError::Error("Invalid input path".to_string()))?,
+    //     input_path.to_str().ok_or_else(|| crate::TblError::Error("Invalid input path".to_string()))?,
     //     ScanArgsParquet::default()
     // )?;
 
@@ -32,7 +32,7 @@ pub async fn cast_parquet_columns(
     // );
 
     // // Collect the schema
-    // let schema = casted_lf.schema().map_err(|e| crate::TablError::PolarsError(e))?;
+    // let schema = casted_lf.schema().map_err(|e| crate::TblError::PolarsError(e))?;
 
     // // Create temporary output path
     // let tmp_output_path = super::parquet_drop::create_tmp_target(output_path.as_path());

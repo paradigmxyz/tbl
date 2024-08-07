@@ -1,4 +1,4 @@
-use crate::TablError;
+use crate::TblError;
 use futures::StreamExt;
 use parquet::arrow::arrow_writer::ArrowWriter;
 use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
@@ -13,9 +13,9 @@ pub async fn merge_parquets(
     input_paths: &Vec<PathBuf>,
     output_path: &PathBuf,
     batch_size: usize,
-) -> Result<(), crate::TablError> {
+) -> Result<(), crate::TblError> {
     if input_paths.is_empty() {
-        return Err(crate::TablError::Error(
+        return Err(crate::TblError::Error(
             "No input files provided".to_string(),
         ));
     }
@@ -52,7 +52,7 @@ pub async fn merge_parquets(
             println!();
             println!("SCHEMA OF {}:", input_path.to_string_lossy());
             println!("{:?}", reader_stream.schema());
-            return Err(TablError::SchemaError(
+            return Err(TblError::SchemaError(
                 "schemas of files are not equal".to_string(),
             ));
         }

@@ -1,10 +1,10 @@
 use super::subcommands::*;
-use crate::TablCliError;
+use crate::TblCliError;
 use clap::{Parser, Subcommand};
 use color_print::cstr;
 use std::path::PathBuf;
 
-pub(crate) async fn run_cli() -> Result<(), TablCliError> {
+pub(crate) async fn run_cli() -> Result<(), TblCliError> {
     let args = Cli::parse();
 
     if args.version {

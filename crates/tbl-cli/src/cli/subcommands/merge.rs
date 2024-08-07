@@ -1,14 +1,14 @@
 use crate::styles::FontStyle;
-use crate::{MergeArgs, TablCliError};
+use crate::{MergeArgs, TblCliError};
 
-pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TablCliError> {
+pub(crate) async fn merge_command(args: MergeArgs) -> Result<(), TblCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
 
     let paths = tbl::filesystem::get_input_paths(args.inputs.paths, args.inputs.tree, true)?;
 
     // check inputs
     if paths.len() <= 1 {
-        return Err(TablCliError::Error(
+        return Err(TblCliError::Error(
             "must specify at least 2 files to merge".to_string(),
         ));
     }

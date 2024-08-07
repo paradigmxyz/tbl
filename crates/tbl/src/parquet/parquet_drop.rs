@@ -33,7 +33,7 @@ pub async fn drop_parquet_columns(
     output_path: PathBuf,
     columns_to_drop: Vec<String>,
     batch_size: usize,
-) -> Result<(), crate::TablError> {
+) -> Result<(), crate::TblError> {
     let input_file = File::open(input_path).await?;
     let tmp_output_path = create_tmp_target(output_path.as_path());
     let mut output_file = File::create(&tmp_output_path).await?;
@@ -100,7 +100,7 @@ pub async fn drop_parquets_columns(
     columns_to_drop: Vec<String>,
     batch_size: usize,
     max_concurrent: usize,
-) -> Result<(), crate::TablError> {
+) -> Result<(), crate::TblError> {
     let semaphore = Arc::new(tokio::sync::Semaphore::new(max_concurrent));
 
     let results = futures::stream::iter(input_output_paths)

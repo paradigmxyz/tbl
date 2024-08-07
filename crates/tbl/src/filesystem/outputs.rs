@@ -1,4 +1,4 @@
-use crate::TablError;
+use crate::TblError;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -213,7 +213,7 @@ pub fn get_output_paths(
     // output_dir: Option<PathBuf>,
     // tree: bool,
     output_spec: OutputPathSpec,
-) -> Result<(Vec<PathBuf>, Vec<PathBuf>), TablError> {
+) -> Result<(Vec<PathBuf>, Vec<PathBuf>), TblError> {
     // gather inputs
     let output_dir = output_spec.output_dir;
     let inputs = match output_spec.inputs {
@@ -273,7 +273,7 @@ pub fn get_output_paths(
                 }
             }
         } else {
-            return Err(TablError::Error("".to_string()));
+            return Err(TblError::Error("".to_string()));
         };
     }
 
@@ -298,7 +298,7 @@ pub fn get_output_paths(
     for output in return_outputs.iter() {
         *count_per_output.entry(output.clone()).or_insert(0) += 1;
         if count_per_output[output] > 1 {
-            return Err(TablError::Error(format!(
+            return Err(TblError::Error(format!(
                 "Duplicate output path: {:?}",
                 output
             )));

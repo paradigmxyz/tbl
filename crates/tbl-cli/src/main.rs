@@ -19,6 +19,6 @@ use types::*;
 mod python;
 
 #[tokio::main]
-async fn main() -> Result<(), TablCliError> {
+async fn main() -> Result<(), TblCliError> {
     cli::run_cli().await
 }

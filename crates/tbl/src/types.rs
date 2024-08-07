@@ -1,8 +1,8 @@
 use thiserror::Error;
 
-/// Tabl Error
+/// Tbl Error
 #[derive(Error, Debug)]
-pub enum TablError {
+pub enum TblError {
     /// Error wrapper for standard IO errors.
     #[error(transparent)]
     IOError(#[from] std::io::Error),

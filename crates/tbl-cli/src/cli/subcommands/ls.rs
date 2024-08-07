@@ -1,7 +1,7 @@
-use crate::{LsArgs, TablCliError};
+use crate::{LsArgs, TblCliError};
 use toolstr::Colorize;
 
-pub(crate) async fn ls_command(ls_args: LsArgs) -> Result<(), TablCliError> {
+pub(crate) async fn ls_command(ls_args: LsArgs) -> Result<(), TblCliError> {
     // get paths
     let paths = tbl::filesystem::get_input_paths(&ls_args.paths, ls_args.tree, true)?;
 
@@ -23,7 +23,7 @@ fn print_file_names(
     paths: &[std::path::PathBuf],
     n: Option<usize>,
     absolute: bool,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     // clear common prefix
     let display_paths = if absolute {
         paths.to_vec()
@@ -70,7 +70,7 @@ fn print_file_names(
     Ok(())
 }
 
-async fn print_stats(paths: &[std::path::PathBuf]) -> Result<(), TablCliError> {
+async fn print_stats(paths: &[std::path::PathBuf]) -> Result<(), TblCliError> {
     // get total file size
     let mut total_size: u64 = 0;
     for path in paths.iter() {

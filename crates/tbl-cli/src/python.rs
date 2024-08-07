@@ -1,4 +1,4 @@
-use crate::TablCliError;
+use crate::TblCliError;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -6,7 +6,7 @@ pub(crate) fn load_df_interactive(
     paths: Vec<PathBuf>,
     lazy: bool,
     executable: Option<String>,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     let paths: Vec<_> = paths
         .iter()
         .map(|path| format!("'{}'", path.to_string_lossy()))

@@ -1,5 +1,5 @@
 use crate::styles::FontStyle;
-use crate::{SchemaArgs, TablCliError};
+use crate::{SchemaArgs, TblCliError};
 use polars::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -8,7 +8,7 @@ use tbl::formats::{format_bytes, format_with_commas};
 use tbl::parquet::{combine_tabular_summaries, summarize_by_schema, TabularSummary};
 use toolstr::Colorize;
 
-pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError> {
+pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TblCliError> {
     // get schemas
     let paths = tbl::filesystem::get_input_paths(&args.paths, args.tree, true)?;
     let summaries = tbl::parquet::get_parquet_summaries(&paths).await?;
@@ -54,7 +54,7 @@ pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError>
         "bytes" => SortSchemasBy::Bytes,
         "files" => SortSchemasBy::Files,
         _ => {
-            return Err(TablCliError::Arg(
+            return Err(TblCliError::Arg(
                 "must sort by rows, bytes, or files".to_string(),
             ))
         }
@@ -124,7 +124,7 @@ fn print_schemas(
     sort_by: SortSchemasBy,
     n_example_paths: usize,
     example_paths: Option<HashMap<Arc<Schema>, Vec<PathBuf>>>,
-) -> Result<(), TablCliError> {
+) -> Result<(), TblCliError> {
     let n_schemas = schema_summaries.len();
 
     // print summary
@@ -226,7 +226,7 @@ fn print_schemas(
     Ok(())
 }
 
-fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), TablCliError> {
+fn print_schema(schema: Arc<Schema>, summary: &TabularSummary) -> Result<(), TblCliError> {
     // gather data
     let names: Vec<String> = schema.iter_names().map(|x| x.to_string()).collect();
     let dtypes: Vec<String> = schema.iter_dtypes().map(|x| x.to_string()).collect();

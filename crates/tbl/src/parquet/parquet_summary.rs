@@ -1,11 +1,11 @@
-use crate::TablError;
+use crate::TblError;
 use futures::stream::{self, StreamExt};
 use parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder;
 use polars::prelude::*;
 use std::collections::HashMap;
 
 /// get the number of rows in a parquet file
-pub async fn get_parquet_row_count(path: &std::path::Path) -> Result<u64, TablError> {
+pub async fn get_parquet_row_count(path: &std::path::Path) -> Result<u64, TblError> {
     let file = tokio::fs::File::open(path).await?;
     let builder = ParquetRecordBatchStreamBuilder::new(file)
         .await?
@@ -15,20 +15,20 @@ pub async fn get_parquet_row_count(path: &std::path::Path) -> Result<u64, TablEr
 }
 
 /// get the number of rows in multiple parquet files
-pub async fn get_parquet_row_counts(paths: &[&std::path::Path]) -> Result<Vec<u64>, TablError> {
+pub async fn get_parquet_row_counts(paths: &[&std::path::Path]) -> Result<Vec<u64>, TblError> {
     let row_counts = stream::iter(paths)
         .map(|path| get_parquet_row_count(path))
         .buffered(10)
-        .collect::<Vec<Result<u64, TablError>>>()
+        .collect::<Vec<Result<u64, TblError>>>()
         .await;
 
     row_counts
         .into_iter()
-        .collect::<Result<Vec<u64>, TablError>>()
+        .collect::<Result<Vec<u64>, TblError>>()
 }
 
 /// get parquet schema
-pub async fn get_parquet_schema(path: &std::path::Path) -> Result<Arc<Schema>, TablError> {
+pub async fn get_parquet_schema(path: &std::path::Path) -> Result<Arc<Schema>, TblError> {
     let path = path.to_path_buf();
     tokio::task::spawn_blocking(move || {
         let scan_args = ScanArgsParquet::default();
@@ -42,16 +42,16 @@ pub async fn get_parquet_schema(path: &std::path::Path) -> Result<Arc<Schema>, T
 /// get parquet schemas
 pub async fn get_parquet_schemas(
     paths: &[std::path::PathBuf],
-) -> Result<Vec<Arc<Schema>>, TablError> {
+) -> Result<Vec<Arc<Schema>>, TblError> {
     let schemas = stream::iter(paths)
         .map(|path| get_parquet_schema(path))
         .buffered(10)
-        .collect::<Vec<Result<Arc<Schema>, TablError>>>()
+        .collect::<Vec<Result<Arc<Schema>, TblError>>>()
         .await;
 
     schemas
         .into_iter()
-        .collect::<Result<Vec<Arc<Schema>>, TablError>>()
+        .collect::<Result<Vec<Arc<Schema>>, TblError>>()
 }
 
 /// TabularSummary
@@ -87,7 +87,7 @@ pub struct TabularColumnSummary {
 }
 
 /// get summary of parquet file
-pub async fn get_parquet_summary(path: &std::path::Path) -> Result<TabularSummary, TablError> {
+pub async fn get_parquet_summary(path: &std::path::Path) -> Result<TabularSummary, TblError> {
     let metadata = std::fs::metadata(path)?;
     let n_bytes_compressed = metadata.len();
     let n_rows = get_parquet_row_count(path).await?;
@@ -110,7 +110,7 @@ pub async fn get_parquet_summary(path: &std::path::Path) -> Result<TabularSummar
 /// get parquet file metadata
 pub async fn get_parquet_metadata(
     path: &std::path::Path,
-) -> Result<std::sync::Arc<parquet::file::metadata::ParquetMetaData>, TablError> {
+) -> Result<std::sync::Arc<parquet::file::metadata::ParquetMetaData>, TblError> {
     let file = tokio::fs::File::open(path).await?;
     let builder = ParquetRecordBatchStreamBuilder::new(file)
         .await?
@@ -132,7 +132,7 @@ pub fn get_parquet_n_bytes_uncompressed(
 /// get column summaries for parquet file
 pub async fn get_parquet_column_summaries(
     metadata: Arc<parquet::file::metadata::ParquetMetaData>,
-) -> Result<Vec<TabularColumnSummary>, TablError> {
+) -> Result<Vec<TabularColumnSummary>, TblError> {
     let n_columns = metadata
         .row_groups()
         .first()
@@ -151,23 +151,23 @@ pub async fn get_parquet_column_summaries(
 /// get parquet schemas
 pub async fn get_parquet_summaries(
     paths: &[std::path::PathBuf],
-) -> Result<Vec<TabularSummary>, TablError> {
+) -> Result<Vec<TabularSummary>, TblError> {
     let schemas = stream::iter(paths)
         .map(|path| get_parquet_summary(path))
         .buffered(10)
-        .collect::<Vec<Result<TabularSummary, TablError>>>()
+        .collect::<Vec<Result<TabularSummary, TblError>>>()
         .await;
 
     schemas
         .into_iter()
-        .collect::<Result<Vec<TabularSummary>, TablError>>()
+        .collect::<Result<Vec<TabularSummary>, TblError>>()
 }
 
 /// combine tabular summaries
 pub fn combine_tabular_summaries(
     summaries: &[&TabularSummary],
     include_columns: bool,
-) -> Result<TabularSummary, TablError> {
+) -> Result<TabularSummary, TblError> {
     let mut total_summary = TabularSummary::default();
     for (s, summary) in summaries.iter().enumerate() {
         if s == 0 {
@@ -190,13 +190,13 @@ pub fn combine_tabular_summaries(
 fn combine_tabular_columns_summaries(
     lhs: &[TabularColumnSummary],
     rhs: &[TabularColumnSummary],
-) -> Result<Vec<TabularColumnSummary>, TablError> {
+) -> Result<Vec<TabularColumnSummary>, TblError> {
     if lhs.is_empty() {
         Ok(rhs.to_vec())
     } else if rhs.is_empty() {
         Ok(lhs.to_vec())
     } else if lhs.len() != rhs.len() {
-        Err(TablError::SchemaError(
+        Err(TblError::SchemaError(
             "different number of columns".to_string(),
         ))
     } else {
@@ -221,7 +221,7 @@ fn combine_tabular_column_summary(
 /// summarize by schema
 pub fn summarize_by_schema(
     summaries: &[&TabularSummary],
-) -> Result<HashMap<Arc<Schema>, TabularSummary>, TablError> {
+) -> Result<HashMap<Arc<Schema>, TabularSummary>, TblError> {
     let mut by_schema: HashMap<Arc<Schema>, Vec<&TabularSummary>> = HashMap::new();
     for summary in summaries.iter() {
         by_schema
