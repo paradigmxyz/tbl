@@ -248,6 +248,10 @@ pub(crate) struct DataArgs {
     //
     // // output options
     //
+    /// skip printing a summary
+    #[clap(long, help_heading = "Output Options")]
+    pub(crate) no_summary: bool,
+
     /// output data as csv
     #[clap(long, help_heading = "Output Options")]
     pub(crate) csv: bool,

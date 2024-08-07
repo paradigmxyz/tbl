@@ -20,7 +20,7 @@ pub(crate) fn output_lazyframe(
     }
 }
 
-fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TblCliError> {
+fn print_lazyframe(lf: LazyFrame, args: &DataArgs) -> Result<(), TblCliError> {
     // match (args.csv, args.json) {
     //     (false, false) => {}
     //     (true, false) => {}
@@ -28,9 +28,12 @@ fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TblCliError> {
     //     (true, true) => {}
     // };
     let df = lf.collect()?;
-    println!();
-    println!();
-    tbl::formats::print_header("Data");
+
+    if !args.no_summary {
+        println!();
+        println!();
+        tbl::formats::print_header("Data");
+    };
     println!("{}", df);
     Ok(())
 }
