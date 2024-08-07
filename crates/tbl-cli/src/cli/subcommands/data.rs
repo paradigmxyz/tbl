@@ -191,6 +191,5 @@ fn enter_interactive_session(
     input_paths: Vec<PathBuf>,
     args: &DataArgs,
 ) -> Result<(), TablCliError> {
-    crate::python::load_df_interactive(input_paths.clone(), args.lf, args.executable.clone())?;
-    Ok(())
+    crate::python::load_df_interactive(input_paths, args.lf, args.executable.clone())
 }
