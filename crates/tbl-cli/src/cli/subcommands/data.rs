@@ -15,12 +15,6 @@ enum OutputMode {
 
 type InputsOutput = (Vec<PathBuf>, Option<PathBuf>);
 
-struct OutputFrame {
-    input_paths: Vec<PathBuf>,
-    output_path: Option<PathBuf>,
-    lf: LazyFrame,
-}
-
 pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     // decide output mode
     let output_mode = decide_output_mode(&args)?;
@@ -192,7 +186,7 @@ fn process_io(
     let lf = create_lazyframe(&input_paths)?;
 
     // transform into output frames
-    let lf = apply_transformations(lf, args)?;
+    let lf = crate::transform::apply_transformations(lf, args)?;
 
     // output data
     match output_mode {
@@ -210,10 +204,6 @@ fn create_lazyframe(paths: &[PathBuf]) -> Result<LazyFrame, TblCliError> {
     let scan_args = polars::prelude::ScanArgsParquet::default();
     let arc_paths = Arc::from(paths.to_vec().into_boxed_slice());
     Ok(LazyFrame::scan_parquet_files(arc_paths, scan_args)?)
-}
-
-fn apply_transformations(lf: LazyFrame, _args: &DataArgs) -> Result<LazyFrame, TblCliError> {
-    Ok(lf)
 }
 
 //

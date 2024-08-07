@@ -201,35 +201,35 @@ pub(crate) struct DataArgs {
     //
     // // transform options
     //
-    /// add new columns
-    #[clap(long, help_heading = "Transform Options", value_name="NEW_COLS", num_args(1..))]
-    pub(crate) with_columns: Vec<String>,
+    /// add new columns, syntax NAME:TYPE [alias = `--with`]
+    #[clap(long, help_heading = "Transform Options", value_name="NEW_COLS", num_args(1..), aliases = ["with"])]
+    pub(crate) with_columns: Option<Vec<String>>,
 
     /// select only these columns
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
-    pub(crate) select: Vec<String>,
+    pub(crate) select: Option<Vec<String>>,
 
     /// drop column(s)
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
-    pub(crate) drop: Vec<String>,
+    pub(crate) drop: Option<Vec<String>>,
 
     /// rename column(s), syntax OLD_NAME=NEW_NAME
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
-    pub(crate) rename: Vec<String>,
+    pub(crate) rename: Option<Vec<String>>,
 
     /// change column type(s), syntax COLUMN=TYPE
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
-    pub(crate) cast: Vec<String>,
+    pub(crate) cast: Option<Vec<String>>,
 
     /// filter rows by values, syntax COLUMN=VALUE
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
-    pub(crate) filter: Vec<String>,
+    pub(crate) filter: Option<Vec<String>>,
 
     /// sort rows, sytax COLUMN[:desc]
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
-    pub(crate) sort: Vec<String>,
+    pub(crate) sort: Option<Vec<String>>,
 
-    /// keep only the first n rows [alias = `limit`]
+    /// keep only the first n rows [alias = `--limit`]
     #[clap(long, aliases = ["limit"], help_heading = "Transform Options")]
     pub(crate) head: Option<usize>,
 
@@ -280,16 +280,16 @@ pub(crate) struct DataArgs {
     #[clap(long, help_heading = "Output Options", value_name = "COLUMN")]
     pub(crate) partition: Option<String>,
 
-    /// partition mode, by range of values in each partition
+    /// partition mode, by range of values per partition
     #[clap(long, help_heading = "Output Options", value_name = "SIZE")]
     pub(crate) partition_by_value: Option<String>,
 
-    /// parition mode, by max bytes per partition
+    /// partition mode, by max bytes per partition
     #[clap(long, help_heading = "Output Options", value_name = "BYTES")]
     pub(crate) partition_by_bytes: Option<String>,
 
-    /// parition mode, by max rows per partition
-    #[clap(long, help_heading = "Output Options", value_name = "BYTES")]
+    /// partition mode, by max rows per partition
+    #[clap(long, help_heading = "Output Options", value_name = "ROWS")]
     pub(crate) partition_by_rows: Option<String>,
 
     /// load as DataFrame in interactive python session

@@ -18,6 +18,8 @@ use types::*;
 
 mod python;
 
+mod transform;
+
 #[tokio::main]
 async fn main() -> Result<(), TblCliError> {
     cli::run_cli().await
