@@ -28,6 +28,12 @@ pub(crate) async fn data_command(args: DataArgs) -> Result<(), TablCliError> {
     // create input output pairs
     let io = gather_inputs_and_outputs(&output_mode, &args)?;
 
+    // print data summary
+    print_summary(&io, &output_mode, &args)?;
+
+    // get user confirmation
+    get_user_confirmation(&output_mode, &args)?;
+
     // exit early if no paths found
     if io.is_empty() {
         println!("[no tabular files selected]");
@@ -110,6 +116,70 @@ fn gather_inputs_and_outputs(
         .collect();
 
     Ok(io)
+}
+
+fn print_summary(
+    inputs_and_outputs: &[InputsOutput],
+    output_mode: &OutputMode,
+    _args: &DataArgs,
+) -> Result<(), TablCliError> {
+    let mut n_input_files = 0;
+    let mut _n_output_files = 0;
+    for (input_files, output_file) in inputs_and_outputs.iter() {
+        n_input_files += input_files.len();
+        if output_file.is_some() {
+            _n_output_files += 1;
+        }
+    }
+
+    match output_mode {
+        OutputMode::PrintToStdout => {
+            println!("loading {} files and printing to stdout", n_input_files)
+        }
+        OutputMode::SaveToSingleFile => println!(
+            "loading {} files and merging result into 1 output file",
+            n_input_files
+        ),
+        OutputMode::SaveToDirectory => println!(
+            "loading {} files and saving results to new directory",
+            n_input_files
+        ),
+        OutputMode::ModifyInplace => println!("modifying {} files in-place", n_input_files),
+        OutputMode::Partition => {}
+        OutputMode::InteractiveLf => println!(
+            "starting interactive session, loading {} files into LazyFrame",
+            n_input_files
+        ),
+        OutputMode::InteractiveDf => println!(
+            "starting interactive session, loading {} files into LazyFrame",
+            n_input_files
+        ),
+    }
+
+    Ok(())
+}
+
+fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<(), TablCliError> {
+    if args.dry {
+        println!("[dry run, exiting]");
+        std::process::exit(0);
+    }
+
+    match output_mode {
+        OutputMode::SaveToSingleFile | OutputMode::SaveToDirectory | OutputMode::ModifyInplace => {}
+        _ => return Ok(()),
+    }
+
+    if !args.confirm {
+        let prompt = "continue? ";
+        if let Ok(true) = inquire::Confirm::new(prompt).with_default(false).prompt() {
+            Ok(())
+        } else {
+            Err(TablCliError::Error("exiting".to_string()))
+        }
+    } else {
+        Ok(())
+    }
 }
 
 fn process_io(
