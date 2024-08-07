@@ -3,7 +3,7 @@ use toolstr::Colorize;
 
 pub(crate) async fn ls_command(ls_args: LsArgs) -> Result<(), TablCliError> {
     // get paths
-    let paths = tbl::filesystem::get_input_paths(ls_args.paths, ls_args.tree, true)?;
+    let paths = tbl::filesystem::get_input_paths(&ls_args.paths, ls_args.tree, true)?;
 
     if paths.is_empty() {
         println!("[no tabular paths]");

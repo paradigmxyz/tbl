@@ -3,18 +3,18 @@ use std::path::PathBuf;
 
 /// get file paths
 pub fn get_input_paths(
-    inputs: Option<Vec<PathBuf>>,
+    inputs: &Option<Vec<PathBuf>>,
     tree: bool,
     sort: bool,
 ) -> Result<Vec<PathBuf>, TablError> {
     // get paths
     let raw_paths = match inputs {
-        Some(raw_paths) => raw_paths,
+        Some(raw_paths) => raw_paths.to_vec(),
         None => vec![std::env::current_dir()?],
     };
 
     // expand tree if specified
-    let mut paths: Vec<std::path::PathBuf> = vec![];
+    let mut paths: Vec<PathBuf> = vec![];
     for raw_path in raw_paths.into_iter() {
         if raw_path.is_dir() {
             let sub_paths = if tree {

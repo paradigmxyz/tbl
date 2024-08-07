@@ -9,11 +9,14 @@
 ))]
 
 mod cli;
-pub(crate) mod styles;
-mod types;
-
 pub(crate) use cli::*;
+
+pub(crate) mod styles;
+
+mod types;
 use types::*;
+
+mod python;
 
 #[tokio::main]
 async fn main() -> Result<(), TablCliError> {

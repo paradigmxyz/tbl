@@ -16,8 +16,7 @@ pub(crate) async fn run_cli() -> Result<(), TablCliError> {
         Some(Subcommands::Ls(args)) => ls_command(args).await,
         Some(Subcommands::Schema(args)) => schema_command(args).await,
         Some(Subcommands::Schemas(args)) => schemas_command(args).await,
-        Some(Subcommands::Data) => data_command(args.data_args).await,
-        None => Ok(()),
+        _ => data_command(args.data_args).await,
     }
 }
 
@@ -46,12 +45,17 @@ pub(crate) struct Cli {
     #[clap(subcommand)]
     pub(crate) command: Option<Subcommands>,
 
-    /// display help message
-    #[clap(short, long, action = clap::ArgAction::HelpLong, help_heading = "General Options")]
+    ///                    display help message
+    #[clap(short, long, verbatim_doc_comment, action = clap::ArgAction::HelpLong, help_heading = "General Options")]
     help: Option<bool>,
 
-    /// display version
-    #[clap(short = 'V', long, help_heading = "General Options")]
+    ///                    display version
+    #[clap(
+        short = 'V',
+        long,
+        verbatim_doc_comment,
+        help_heading = "General Options"
+    )]
     version: bool,
 
     #[clap(flatten)]
@@ -65,10 +69,10 @@ pub(crate) enum Subcommands {
     /// Display list of tabular files
     Ls(LsArgs),
 
-    /// Display
+    /// Display each schema present among selected files
     Schema(SchemaArgs),
 
-    /// Show each schema of tabular files
+    /// Display single summary of all schemas
     Schemas(SchemasArgs),
 
     /// Load, transform, and output file data [default subcommand]
@@ -182,7 +186,7 @@ pub(crate) struct DataArgs {
     //
     // // input options
     //
-    ///                     input path(s) to use
+    ///                       input path(s) to use
     #[clap(
         verbatim_doc_comment,
         help_heading = "Input Options",
@@ -190,7 +194,7 @@ pub(crate) struct DataArgs {
     )]
     pub(crate) paths: Option<Vec<PathBuf>>,
 
-    ///                 recursively use all files in tree as inputs
+    ///                   recursively use all files in tree as inputs
     #[clap(short, long, verbatim_doc_comment, help_heading = "Input Options")]
     pub(crate) tree: bool,
 
@@ -198,7 +202,7 @@ pub(crate) struct DataArgs {
     // // transform options
     //
     /// add new columns
-    #[clap(long, help_heading = "Transform Options", value_name="COLUMN", num_args(1..))]
+    #[clap(long, help_heading = "Transform Options", value_name="NEW_COLS", num_args(1..))]
     pub(crate) with_columns: Vec<String>,
 
     /// select only these columns
@@ -238,12 +242,20 @@ pub(crate) struct DataArgs {
     pub(crate) offset: Option<usize>,
 
     /// compute value counts of column(s)
-    #[clap(long, help_heading = "Transform Options", value_name="COLUMN", num_args(1..))]
-    pub(crate) value_counts: Option<Vec<String>>,
+    #[clap(long, help_heading = "Transform Options", value_name = "COLUMN")]
+    pub(crate) value_counts: Option<String>,
 
     //
     // // output options
     //
+    /// output data as csv
+    #[clap(long, help_heading = "Output Options")]
+    pub(crate) csv: bool,
+
+    /// output data as json
+    #[clap(long, help_heading = "Output Options")]
+    pub(crate) json: bool,
+
     /// modify files in place
     #[clap(long, help_heading = "Output Options")]
     pub(crate) inplace: bool,
@@ -264,13 +276,21 @@ pub(crate) struct DataArgs {
     #[clap(long, help_heading = "Output Options", value_name = "POSTFIX")]
     pub(crate) output_postfix: Option<String>,
 
-    /// output data as csv
-    #[clap(long, help_heading = "Output Options")]
-    pub(crate) csv: bool,
+    /// partition output over this column
+    #[clap(long, help_heading = "Output Options", value_name = "COLUMN")]
+    pub(crate) partition: Option<String>,
 
-    /// output data as json
-    #[clap(long, help_heading = "Output Options")]
-    pub(crate) json: bool,
+    /// partition mode, by range of values in each partition
+    #[clap(long, help_heading = "Output Options", value_name = "SIZE")]
+    pub(crate) partition_by_value: Option<String>,
+
+    /// parition mode, by max bytes per partition
+    #[clap(long, help_heading = "Output Options", value_name = "BYTES")]
+    pub(crate) partition_by_bytes: Option<String>,
+
+    /// parition mode, by max rows per partition
+    #[clap(long, help_heading = "Output Options", value_name = "BYTES")]
+    pub(crate) partition_by_rows: Option<String>,
 
     /// load as DataFrame in interactive python session
     #[clap(long, help_heading = "Output Options")]

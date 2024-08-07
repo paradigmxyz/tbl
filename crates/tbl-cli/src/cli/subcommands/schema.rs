@@ -10,7 +10,7 @@ use toolstr::Colorize;
 
 pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TablCliError> {
     // get schemas
-    let paths = tbl::filesystem::get_input_paths(args.paths, args.tree, true)?;
+    let paths = tbl::filesystem::get_input_paths(&args.paths, args.tree, true)?;
     let summaries = tbl::parquet::get_parquet_summaries(&paths).await?;
     let ref_summaries: Vec<&tbl::parquet::TabularSummary> = summaries.iter().collect();
     let by_schema = summarize_by_schema(ref_summaries.as_slice())?;
