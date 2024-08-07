@@ -15,3 +15,4 @@ exclude = [".github/"]
 thiserror = "1.0"
 tokio = { version = "1.32.0", features = ["full"] }
 arrow = "52.0.0"
+polars = { version = "0.40.0", features = ["json", "parquet", "lazy", "csv"] }

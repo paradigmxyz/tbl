@@ -1220,6 +1220,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonpath_lib_polars_vendor"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4bd9354947622f7471ff713eacaabdb683ccb13bba4edccaab9860abf480b7d"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1975,7 +1986,7 @@ dependencies = [
  "polars-arrow 0.35.4",
  "polars-core 0.35.4",
  "polars-error 0.35.4",
- "polars-json",
+ "polars-json 0.35.4",
  "polars-parquet 0.35.4",
  "polars-time 0.35.4",
  "polars-utils 0.35.4",
@@ -2013,12 +2024,15 @@ dependencies = [
  "polars-arrow 0.40.0",
  "polars-core 0.40.0",
  "polars-error 0.40.0",
+ "polars-json 0.40.0",
  "polars-parquet 0.40.0",
  "polars-time 0.40.0",
  "polars-utils 0.40.0",
  "rayon",
  "regex",
  "ryu",
+ "serde_json",
+ "simd-json",
  "simdutf8",
  "smartstring",
  "tokio",
@@ -2047,6 +2061,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "polars-json"
+version = "0.40.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "160cbad0145b93ac6a88639aadfa6f7d7c769d05a8674f9b7e895b398cae9901"
+dependencies = [
+ "ahash",
+ "chrono",
+ "fallible-streaming-iterator",
+ "hashbrown",
+ "indexmap",
+ "itoa",
+ "num-traits",
+ "polars-arrow 0.40.0",
+ "polars-error 0.40.0",
+ "polars-utils 0.40.0",
+ "ryu",
+ "simd-json",
+ "streaming-iterator",
+]
+
+[[package]]
 name = "polars-lazy"
 version = "0.35.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2059,7 +2094,7 @@ dependencies = [
  "polars-arrow 0.35.4",
  "polars-core 0.35.4",
  "polars-io 0.35.4",
- "polars-json",
+ "polars-json 0.35.4",
  "polars-ops 0.35.4",
  "polars-pipe 0.35.4",
  "polars-plan 0.35.4",
@@ -2084,6 +2119,7 @@ dependencies = [
  "polars-core 0.40.0",
  "polars-expr",
  "polars-io 0.40.0",
+ "polars-json 0.40.0",
  "polars-ops 0.40.0",
  "polars-pipe 0.40.0",
  "polars-plan 0.40.0",
@@ -2136,15 +2172,18 @@ dependencies = [
  "hashbrown",
  "hex",
  "indexmap",
+ "jsonpath_lib_polars_vendor",
  "memchr",
  "num-traits",
  "polars-arrow 0.40.0",
  "polars-compute",
  "polars-core 0.40.0",
  "polars-error 0.40.0",
+ "polars-json 0.40.0",
  "polars-utils 0.40.0",
  "rayon",
  "regex",
+ "serde_json",
  "smartstring",
  "unicode-reverse",
  "version_check",
@@ -2291,6 +2330,7 @@ dependencies = [
  "polars-arrow 0.40.0",
  "polars-core 0.40.0",
  "polars-io 0.40.0",
+ "polars-json 0.40.0",
  "polars-ops 0.40.0",
  "polars-parquet 0.40.0",
  "polars-time 0.40.0",
@@ -2706,6 +2746,7 @@ version = "1.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "455182ea6142b14f93f4bc5320a2b31c1f266b66a4a5c858b013302a5d8cbfc3"
 dependencies = [
+ "indexmap",
  "itoa",
  "ryu",
  "serde",

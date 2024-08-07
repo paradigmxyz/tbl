@@ -12,7 +12,7 @@ arrow = { workspace = true }
 futures = "0.3.30"
 hex = "0.4.3"
 parquet = { version = "52.0.0", features = ["async"] }
-polars = { version = "0.40.0", features = ["lazy", "parquet"] }
+polars = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 

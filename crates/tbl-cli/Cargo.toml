@@ -17,8 +17,8 @@ tokio = { workspace = true }
 thiserror = { workspace = true }
 tbl = { version = "0.1.0", path = "../tbl" }
 term_size = "0.3.2"
+polars = { workspace = true }
 toolstr = "0.1.5"
-polars = "0.40.0"
 toolstr_colored = "2.1.1"
 inquire = "0.7.5"
 anstyle = "1.0.7"
