@@ -23,6 +23,7 @@ toolstr_colored = "2.1.1"
 inquire = "0.7.5"
 anstyle = "1.0.7"
 color-print = "0.3.6"
+chrono = "0.4.38"
 
 [build-dependencies]
 built = "0.7"
