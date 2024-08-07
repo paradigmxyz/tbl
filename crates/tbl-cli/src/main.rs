@@ -20,6 +20,8 @@ mod python;
 
 mod transform;
 
+mod output;
+
 #[tokio::main]
 async fn main() -> Result<(), TblCliError> {
     cli::run_cli().await

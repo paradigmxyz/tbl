@@ -17,3 +17,7 @@ pub use parquet_merge::*;
 /// parquet insert functions
 pub mod parquet_insert;
 pub use parquet_insert::*;
+
+/// parquet parquet_scan
+pub mod parquet_scan;
+pub use parquet_scan::*;

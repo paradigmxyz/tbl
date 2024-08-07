@@ -35,3 +35,25 @@ pub(crate) enum TblCliError {
     #[error("Input error: {0}")]
     Error(String),
 }
+
+pub(crate) enum OutputMode {
+    PrintToStdout,
+    SaveToSingleFile,
+    ModifyInplace,
+    SaveToDirectory,
+    Partition,
+    InteractiveLf,
+    InteractiveDf,
+}
+
+impl OutputMode {
+    pub(crate) fn writes_to_disk(&self) -> bool {
+        matches!(
+            self,
+            OutputMode::SaveToSingleFile
+                | OutputMode::SaveToDirectory
+                | OutputMode::ModifyInplace
+                | OutputMode::Partition
+        )
+    }
+}

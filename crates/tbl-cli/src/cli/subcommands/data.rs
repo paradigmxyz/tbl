@@ -1,19 +1,6 @@
-use crate::{DataArgs, TblCliError};
-use polars::prelude::*;
+use crate::{DataArgs, OutputMode, TblCliError};
 use std::path::PathBuf;
 use tbl::filesystem::{get_input_paths, get_output_paths, OutputPathSpec};
-
-enum OutputMode {
-    PrintToStdout,
-    SaveToSingleFile,
-    ModifyInplace,
-    SaveToDirectory,
-    Partition,
-    InteractiveLf,
-    InteractiveDf,
-}
-
-type InputsOutput = (Vec<PathBuf>, Option<PathBuf>);
 
 pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     // decide output mode
@@ -25,14 +12,11 @@ pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     // print data summary
     print_summary(&io, &output_mode, &args)?;
 
+    // exit early as needed
+    exit_early_if_needed(args.dry, &io);
+
     // get user confirmation
     get_user_confirmation(&output_mode, &args)?;
-
-    // exit early if no paths found
-    if io.is_empty() {
-        println!("[no tabular files selected]");
-        std::process::exit(0)
-    };
 
     // process each input output pair
     for (input_paths, output_path) in io.into_iter() {
@@ -64,10 +48,11 @@ fn decide_output_mode(args: &DataArgs) -> Result<OutputMode, TblCliError> {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn gather_inputs_and_outputs(
     output_mode: &OutputMode,
     args: &DataArgs,
-) -> Result<Vec<InputsOutput>, TblCliError> {
+) -> Result<Vec<(Vec<PathBuf>, Option<PathBuf>)>, TblCliError> {
     let mut io = Vec::new();
     match output_mode {
         OutputMode::PrintToStdout
@@ -113,7 +98,7 @@ fn gather_inputs_and_outputs(
 }
 
 fn print_summary(
-    inputs_and_outputs: &[InputsOutput],
+    inputs_and_outputs: &[(Vec<PathBuf>, Option<PathBuf>)],
     output_mode: &OutputMode,
     _args: &DataArgs,
 ) -> Result<(), TblCliError> {
@@ -153,15 +138,20 @@ fn print_summary(
     Ok(())
 }
 
-fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<(), TblCliError> {
-    if args.dry {
+fn exit_early_if_needed(dry: bool, io: &[(Vec<PathBuf>, Option<PathBuf>)]) {
+    if dry {
         println!("[dry run, exiting]");
         std::process::exit(0);
     }
+    if io.is_empty() {
+        println!("[no tabular files selected]");
+        std::process::exit(0)
+    };
+}
 
-    match output_mode {
-        OutputMode::SaveToSingleFile | OutputMode::SaveToDirectory | OutputMode::ModifyInplace => {}
-        _ => return Ok(()),
+fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<(), TblCliError> {
+    if !output_mode.writes_to_disk() {
+        return Ok(());
     }
 
     if !args.confirm {
@@ -183,81 +173,11 @@ fn process_io(
     args: &DataArgs,
 ) -> Result<(), TblCliError> {
     // create lazy frame
-    let lf = create_lazyframe(&input_paths)?;
+    let lf = tbl::parquet::create_lazyframe(&input_paths)?;
 
     // transform into output frames
     let lf = crate::transform::apply_transformations(lf, args)?;
 
     // output data
-    match output_mode {
-        OutputMode::PrintToStdout => print_lazyframe(lf, args),
-        OutputMode::SaveToSingleFile => save_lf_to_disk(lf, output_path, args),
-        OutputMode::SaveToDirectory => save_lf_to_disk(lf, output_path, args),
-        OutputMode::ModifyInplace => save_lf_to_disk(lf, output_path, args),
-        OutputMode::Partition => partition_data(lf, input_paths, args),
-        OutputMode::InteractiveLf => enter_interactive_session(lf, input_paths, args),
-        OutputMode::InteractiveDf => enter_interactive_session(lf, input_paths, args),
-    }
-}
-
-fn create_lazyframe(paths: &[PathBuf]) -> Result<LazyFrame, TblCliError> {
-    let scan_args = polars::prelude::ScanArgsParquet::default();
-    let arc_paths = Arc::from(paths.to_vec().into_boxed_slice());
-    Ok(LazyFrame::scan_parquet_files(arc_paths, scan_args)?)
-}
-
-//
-// // output functions
-//
-
-fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TblCliError> {
-    // match (args.csv, args.json) {
-    //     (false, false) => {}
-    //     (true, false) => {}
-    //     (false, true) => {}
-    //     (true, true) => {}
-    // };
-    let df = lf.collect()?;
-    println!("{}", df);
-    Ok(())
-}
-
-fn save_lf_to_disk(
-    lf: LazyFrame,
-    output_path: Option<PathBuf>,
-    args: &DataArgs,
-) -> Result<(), TblCliError> {
-    let output_path = match output_path {
-        Some(output_path) => output_path,
-        None => return Err(TblCliError::Error("no output path specified".to_string())),
-    };
-    if output_path.ends_with(".csv") | args.csv {
-        let options = CsvWriterOptions::default();
-        lf.sink_csv(output_path, options)?;
-    } else if output_path.ends_with(".json") | args.json {
-        let options = JsonWriterOptions::default();
-        lf.sink_json(output_path, options)?;
-    } else {
-        let options = ParquetWriteOptions::default();
-        lf.sink_parquet(output_path, options)?;
-    };
-    Ok(())
-}
-
-fn partition_data(
-    _lf: LazyFrame,
-    _input_paths: Vec<PathBuf>,
-    _args: &DataArgs,
-) -> Result<(), TblCliError> {
-    Err(TblCliError::Error(
-        "partition functionality not implemented".to_string(),
-    ))
-}
-
-fn enter_interactive_session(
-    _lf: LazyFrame,
-    input_paths: Vec<PathBuf>,
-    args: &DataArgs,
-) -> Result<(), TblCliError> {
-    crate::python::load_df_interactive(input_paths, args.lf, args.executable.clone())
+    crate::output::output_lazyframe(lf, input_paths, output_path, output_mode, args)
 }
