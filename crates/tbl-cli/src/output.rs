@@ -28,6 +28,9 @@ fn print_lazyframe(lf: LazyFrame, _args: &DataArgs) -> Result<(), TblCliError> {
     //     (true, true) => {}
     // };
     let df = lf.collect()?;
+    println!();
+    println!();
+    tbl::formats::print_header("Data");
     println!("{}", df);
     Ok(())
 }

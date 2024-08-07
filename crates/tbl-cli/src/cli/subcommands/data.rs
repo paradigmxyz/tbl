@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use tbl::filesystem::{get_input_paths, get_output_paths, OutputPathSpec};
 
 pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
+    inquire::set_global_render_config(crate::styles::get_render_config());
+
     // decide output mode
     let output_mode = decide_output_mode(&args)?;
 
@@ -10,13 +12,10 @@ pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     let io = gather_inputs_and_outputs(&output_mode, &args)?;
 
     // print data summary
-    print_summary(&io, &output_mode, &args)?;
+    crate::summary::print_summary(&io, &output_mode, &args)?;
 
     // exit early as needed
-    exit_early_if_needed(args.dry, &io);
-
-    // get user confirmation
-    get_user_confirmation(&output_mode, &args)?;
+    exit_early_if_needed(args.dry, args.confirm, &output_mode, &io);
 
     // process each input output pair
     for (input_paths, output_path) in io.into_iter() {
@@ -53,6 +52,7 @@ fn gather_inputs_and_outputs(
     output_mode: &OutputMode,
     args: &DataArgs,
 ) -> Result<Vec<(Vec<PathBuf>, Option<PathBuf>)>, TblCliError> {
+    // parse input output pairs
     let mut io = Vec::new();
     match output_mode {
         OutputMode::PrintToStdout
@@ -97,72 +97,32 @@ fn gather_inputs_and_outputs(
     Ok(io)
 }
 
-fn print_summary(
-    inputs_and_outputs: &[(Vec<PathBuf>, Option<PathBuf>)],
+fn exit_early_if_needed(
+    dry: bool,
+    confirm: bool,
     output_mode: &OutputMode,
-    _args: &DataArgs,
-) -> Result<(), TblCliError> {
-    let mut n_input_files = 0;
-    let mut _n_output_files = 0;
-    for (input_files, output_file) in inputs_and_outputs.iter() {
-        n_input_files += input_files.len();
-        if output_file.is_some() {
-            _n_output_files += 1;
-        }
-    }
-
-    match output_mode {
-        OutputMode::PrintToStdout => {
-            println!("loading {} files and printing to stdout", n_input_files)
-        }
-        OutputMode::SaveToSingleFile => println!(
-            "loading {} files and merging result into 1 output file",
-            n_input_files
-        ),
-        OutputMode::SaveToDirectory => println!(
-            "loading {} files and saving results to new directory",
-            n_input_files
-        ),
-        OutputMode::ModifyInplace => println!("modifying {} files in-place", n_input_files),
-        OutputMode::Partition => {}
-        OutputMode::InteractiveLf => println!(
-            "starting interactive session, loading {} files into LazyFrame",
-            n_input_files
-        ),
-        OutputMode::InteractiveDf => println!(
-            "starting interactive session, loading {} files into LazyFrame",
-            n_input_files
-        ),
-    }
-
-    Ok(())
-}
-
-fn exit_early_if_needed(dry: bool, io: &[(Vec<PathBuf>, Option<PathBuf>)]) {
+    io: &[(Vec<PathBuf>, Option<PathBuf>)],
+) {
+    // exit if performing dry run
     if dry {
         println!("[dry run, exiting]");
         std::process::exit(0);
     }
+
+    // exit if no files selected
     if io.is_empty() {
         println!("[no tabular files selected]");
         std::process::exit(0)
     };
-}
 
-fn get_user_confirmation(output_mode: &OutputMode, args: &DataArgs) -> Result<(), TblCliError> {
-    if !output_mode.writes_to_disk() {
-        return Ok(());
-    }
-
-    if !args.confirm {
+    // exit if user does not confirm write operations
+    if output_mode.writes_to_disk() & !confirm {
         let prompt = "continue? ";
         if let Ok(true) = inquire::Confirm::new(prompt).with_default(false).prompt() {
-            Ok(())
         } else {
-            Err(TblCliError::Error("exiting".to_string()))
+            println!("[exiting]");
+            std::process::exit(0)
         }
-    } else {
-        Ok(())
     }
 }
 

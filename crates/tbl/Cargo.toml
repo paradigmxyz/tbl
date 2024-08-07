@@ -9,6 +9,7 @@ repository.workspace = true
 
 [dependencies]
 arrow = { workspace = true }
+colored = "2.1.0"
 futures = "0.3.30"
 hex = "0.4.3"
 parquet = { version = "52.0.0", features = ["async"] }

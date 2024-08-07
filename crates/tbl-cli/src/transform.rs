@@ -29,27 +29,30 @@ pub(crate) fn apply_with_columns(
         Some(columns) => {
             let mut new_lf = lf;
             for col_spec in columns {
-                let parts: Vec<&str> = col_spec.splitn(3, ':').collect();
-                if parts.len() < 2 || parts.len() > 3 {
-                    return Err(TblCliError::Error(
-                        "invalid format for with_column".to_string(),
-                    ));
-                }
-
-                let (name, type_str) = (parts[0], parts[1]);
-                let value_str = parts.get(2).and_then(|s| s.split('=').nth(1));
-                let dtype = parse_dtype(type_str)?;
-                let expr = if let Some(value) = value_str {
-                    create_value_expr(value, &dtype)?
-                } else {
-                    lit(NULL).cast(dtype)
-                };
-
-                new_lf = new_lf.with_column(expr.alias(name));
+                new_lf = new_lf.with_column(parse_new_column_expr(col_spec)?);
             }
             Ok(new_lf)
         }
     }
+}
+
+fn parse_new_column_expr(col_spec: &str) -> Result<Expr, TblCliError> {
+    let parts: Vec<&str> = col_spec.splitn(3, ':').collect();
+    if parts.len() < 2 || parts.len() > 3 {
+        return Err(TblCliError::Error(
+            "invalid format for with_column".to_string(),
+        ));
+    }
+    let (name, type_str) = (parts[0], parts[1]);
+    let value_str = parts.get(2).and_then(|s| s.split('=').nth(1));
+    let dtype = parse_dtype(type_str)?;
+    let expr = if let Some(value) = value_str {
+        create_value_expr(value, &dtype)?
+    } else {
+        lit(NULL).cast(dtype)
+    };
+    let expr = expr.alias(name);
+    Ok(expr)
 }
 
 fn parse_dtype(type_str: &str) -> Result<DataType, TblCliError> {
@@ -267,8 +270,14 @@ pub(crate) fn apply_value_counts(lf: LazyFrame, n: Option<&str>) -> Result<LazyF
     match n {
         None => Ok(lf),
         Some(column) => {
-            let expr = col(column).value_counts(true, false, "count".to_string(), false);
-            Ok(lf.select([expr]))
+            // let expr = col(column).value_counts(true, false, "count".to_string(), false);
+            // Ok(lf.select([expr]))
+            let sort_options = SortMultipleOptions::new().with_order_descending(true);
+            let value_counts = lf
+                .group_by(&[col(column)])
+                .agg(&[col(column).count().alias("count")])
+                .sort(["count"], sort_options);
+            Ok(value_counts)
         }
     }
 }
