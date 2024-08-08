@@ -33,6 +33,12 @@ Get help with <white><bold>SUMMARY_OPTIONS</bold></white> using <white><bold>tbl
 
 Data mode is the default mode. <white><bold>DATA_OPTIONS</bold></white> are documented below
 "),
+    after_help = cstr!("<rgb(0,225,0)><bold>Output Modes:</bold></rgb(0,225,0)>
+<white><bold>1.</bold></white> output results into <white><bold>single file</bold></white>  <white><bold>--output-file</bold></white> /path/to/file.parquet
+<white><bold>2.</bold></white> modify each file <white><bold>inplace</bold></white>         <white><bold>--inplace</bold></white>
+<white><bold>3.</bold></white> copy files into a <white><bold>new dir</bold></white>        <white><bold>--output-dir</bold></white> /path/to/dir
+<white><bold>4.</bold></white> load <white><bold>interactive</bold></white> python session  <white><bold>--df | --lf</bold></white>
+<white><bold>5.</bold></white> output data to <white><bold>stdout</bold></white>            (default behavior)"),
     long_about = None,
     disable_help_subcommand = true,
     disable_help_flag = true,
@@ -219,7 +225,7 @@ pub(crate) struct DataArgs {
     /// add new columns, syntax NAME:TYPE [alias --with]
     #[clap(
         long,
-        help = cstr!("add new columns, syntax <white><bold>NAME:TYPE</bold></white> [alias <white><bold>--with</bold></white>]"),
+        help = cstr!("insert columns, syntax <white><bold>NAME:TYPE</bold></white> [alias <white><bold>--with</bold></white>]"),
         help_heading = "Transform Options",
         value_name="NEW_COLS",
         num_args(1..),

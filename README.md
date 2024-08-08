@@ -98,13 +98,13 @@ These input selection options can be used with each `tbl` subcommand:
 
 `tbl` can output its results in many different forms:
 
-| output mode | `tbl` option |
-| --- | --- |
-| output all results to single file | `--output-file /path/to/file.parquet` |
-| modify each file in place | `--inplace` |
-| create equivalent files in a new dir | `--output-dir /path/to/dir` |
-| load dataframe in interactive python session | `--df` |
-| output data to stdout | (default behavior) |
+| mode | description | `tbl` option |
+| --- | --- | --- |
+| single file | output all results to single file | `--output-file /path/to/file.parquet` |
+| inplace | modify each file inplace | `--inplace` |
+| new directory | create equivalent files in a new directory | `--output-dir /path/to/dir` |
+| interactive | load dataframe in interactive python session | `--df` |
+| stdout | output data to stdout | (default behavior) |
 
 ## API Reference
 
@@ -221,6 +221,7 @@ There are a few features that we are currently exploring:
 1. **S3 and cloud buckets**: ability to read and write parquet files with all the same operations that can be done with local files
 2. **Re-partitioning**: ability to change how a set of parquet files are partitioned, such as changing the partition key or partition size
 3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
+4. **Performance optimization**: there's always room to make things faster
 
 **What other tools exist for interacting with parquet from the command line?**
 
