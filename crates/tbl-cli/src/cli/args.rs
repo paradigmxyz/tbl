@@ -34,11 +34,11 @@ Get help with <white><bold>SUMMARY_OPTIONS</bold></white> using <white><bold>tbl
 Data mode is the default mode. <white><bold>DATA_OPTIONS</bold></white> are documented below
 "),
     after_help = cstr!("<rgb(0,225,0)><bold>Output Modes:</bold></rgb(0,225,0)>
-<white><bold>1.</bold></white> output results into <white><bold>single file</bold></white>  <white><bold>--output-file</bold></white> /path/to/file.parquet
-<white><bold>2.</bold></white> modify each file <white><bold>inplace</bold></white>         <white><bold>--inplace</bold></white>
-<white><bold>3.</bold></white> copy files into a <white><bold>new dir</bold></white>        <white><bold>--output-dir</bold></white> /path/to/dir
-<white><bold>4.</bold></white> load <white><bold>interactive</bold></white> python session  <white><bold>--df | --lf</bold></white>
-<white><bold>5.</bold></white> output data to <white><bold>stdout</bold></white>            (default behavior)"),
+<white><bold>1.</bold></white> output results in <white><bold>single file</bold></white>   <white><bold>--output-file</bold></white> /path/to/file.parquet
+<white><bold>2.</bold></white> modify each file <white><bold>inplace</bold></white>        <white><bold>--inplace</bold></white>
+<white><bold>3.</bold></white> copy files into a <white><bold>new dir</bold></white>       <white><bold>--output-dir</bold></white> /path/to/dir
+<white><bold>4.</bold></white> load as <white><bold>interactive</bold></white> python      <white><bold>--df | --lf</bold></white>
+<white><bold>5.</bold></white> output data to <white><bold>stdout</bold></white>           (default behavior)"),
     long_about = None,
     disable_help_subcommand = true,
     disable_help_flag = true,
@@ -51,11 +51,11 @@ pub(crate) struct Cli {
     #[clap(subcommand)]
     pub(crate) command: Option<Subcommands>,
 
-    ///                    display help message
+    ///                   display help message
     #[clap(short, long, verbatim_doc_comment, action = clap::ArgAction::HelpLong, help_heading = "General Options")]
     help: Option<bool>,
 
-    ///                    display version
+    ///                   display version
     #[clap(
         short = 'V',
         long,
@@ -193,7 +193,7 @@ pub(crate) struct DataArgs {
     //
     // // input options
     //
-    ///                       input path(s) to use
+    ///                      input path(s) to use
     #[clap(
         verbatim_doc_comment,
         help_heading = "Input Options",
@@ -201,7 +201,7 @@ pub(crate) struct DataArgs {
     )]
     pub(crate) paths: Option<Vec<PathBuf>>,
 
-    ///                   recursively use all files in tree as inputs
+    ///                  recursively use all files in tree as inputs
     #[clap(short, long, verbatim_doc_comment, help_heading = "Input Options")]
     pub(crate) tree: bool,
 
@@ -227,7 +227,7 @@ pub(crate) struct DataArgs {
         long,
         help = cstr!("insert columns, syntax <white><bold>NAME:TYPE</bold></white> [alias <white><bold>--with</bold></white>]"),
         help_heading = "Transform Options",
-        value_name="NEW_COLS",
+        value_name="NEW_COL",
         num_args(1..),
         aliases = ["with"]
     )]
@@ -318,27 +318,47 @@ pub(crate) struct DataArgs {
     pub(crate) output_dir: Option<PathBuf>,
 
     /// prefix to add to output filenames
-    #[clap(long, help_heading = "Output Options", value_name = "PREFIX")]
+    #[clap(long, help_heading = "Output Options", value_name = "PRE-FIX")]
     pub(crate) output_prefix: Option<String>,
 
     /// postfix to add to output filenames
-    #[clap(long, help_heading = "Output Options", value_name = "POSTFIX")]
+    #[clap(long, help_heading = "Output Options", value_name = "POST-FIX")]
     pub(crate) output_postfix: Option<String>,
 
     /// partition output over this column
-    #[clap(long, help_heading = "Output Options", value_name = "COLUMN")]
+    #[clap(
+        long,
+        help_heading = "Output Options",
+        value_name = "COLUMN",
+        hide = true
+    )]
     pub(crate) partition: Option<String>,
 
     /// partition mode, by range of values per partition
-    #[clap(long, help_heading = "Output Options", value_name = "SIZE")]
+    #[clap(
+        long,
+        help_heading = "Output Options",
+        value_name = "SIZE",
+        hide = true
+    )]
     pub(crate) partition_by_value: Option<String>,
 
     /// partition mode, by max bytes per partition
-    #[clap(long, help_heading = "Output Options", value_name = "BYTES")]
+    #[clap(
+        long,
+        help_heading = "Output Options",
+        value_name = "BYTES",
+        hide = true
+    )]
     pub(crate) partition_by_bytes: Option<String>,
 
     /// partition mode, by max rows per partition
-    #[clap(long, help_heading = "Output Options", value_name = "ROWS")]
+    #[clap(
+        long,
+        help_heading = "Output Options",
+        value_name = "ROWS",
+        hide = true
+    )]
     pub(crate) partition_by_rows: Option<String>,
 
     /// load as DataFrame in interactive python session
