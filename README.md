@@ -10,13 +10,13 @@ Goals of `tbl`:
 ## Contents
 1. [Installation](#installation)
 2. [Example Usage](#example-usage)
-3. [API Reference](#api-reference)
     1. [Listing files](#listing-files)
     2. [Looking up schemas](#looking-up-schemas)
     3. [Selecting input files](#selecting-input-files)
     4. [Performing edits](#performing-edits)
     5. [Selecting output mode](#selecting-output-mode)
-4. [FAQ](#faq)
+4. [API Reference](#api-reference)
+5. [FAQ](#faq)
 
 ## Installation
 
