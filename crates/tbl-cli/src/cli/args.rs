@@ -73,6 +73,7 @@ pub(crate) enum Subcommands {
     Schema(SchemaArgs),
 
     /// Display single summary of all schemas
+    #[command(hide = true)]
     Schemas(SchemasArgs),
 
     /// Load, transform, and output file data [default subcommand]

@@ -190,7 +190,6 @@ fn print_schemas(
         }
         print_schema(summary.schema.clone(), &summary)?;
 
-        println!();
         if let Some(example_paths) = example_paths.as_ref() {
             if let Some(paths_vec) = example_paths.get(&summary.schema) {
                 if n_example_paths == 1 {

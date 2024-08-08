@@ -213,30 +213,6 @@ General Options:
   -h, --help  display help message
 ```
 
-##### Output of `tbl schemas -h`:
-
-```markdown
-Display table representation of each schema in the selected files
-
-Usage: tbl schema [OPTIONS] [PATHS]...
-
-Arguments:
-  [PATHS]...  input path(s) to use
-
-Options:
-  -t, --tree               recursively list all files in tree
-      --bytes              display bytes stats
-      --stats              display stats of each schema group
-      --columns <COLUMNS>  columns to print
-      --n <N>              number of schemas to print
-      --examples           show examples
-      --absolute           show absolute paths in examples
-      --sort <SORT>        sort by number of rows, files, or bytes [default: bytes]
-
-General Options:
-  -h, --help  display help message
-```
-
 ## FAQ
 
 **What is the plan for `tbl`?**
