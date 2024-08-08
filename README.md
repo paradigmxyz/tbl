@@ -5,7 +5,7 @@
 
 Goals of `tbl`:
 - make it effortless to read, edit, and manage parquet datasets
-- use a cli-native version of polars syntax, so if you know python polars you already know `tbl`
+- use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already know `tbl`
 
 ## Contents
 1. [Installation](#installation)
@@ -215,7 +215,7 @@ General Options:
 
 ## FAQ
 
-**What is the plan for `tbl`?**
+### What is the plan for `tbl`?
 
 There are a few features that we are currently exploring:
 1. **S3 and cloud buckets**: ability to read and write parquet files with all the same operations that can be done with local files
@@ -223,10 +223,18 @@ There are a few features that we are currently exploring:
 3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
 4. **Performance optimization**: there's always room to make things faster
 
-**What other tools exist for interacting with parquet from the command line?**
+### What other tools exist for interacting with parquet from the command line?
 
-Check out these other tools that can be used for interacting with parquet files:
-- [duckdb](https://duckdb.org/docs/api/cli/overview)
-- [pqrs](https://github.com/manojkarthick/pqrs)
-- [parquet-cli](https://github.com/apache/parquet-java/blob/master/parquet-cli/README.md)
+The most common tools are [`duckdb`](https://duckdb.org/docs/api/cli/overview), [`pqrs`](https://github.com/manojkarthick/pqrs), and [`parquet-cli`](https://github.com/apache/parquet-java/blob/master/parquet-cli/README.md).
 
+### Why build `tbl` when `duckdb` has a cli?
+
+`duckdb` is an incredible tool and we recommend checking it out, especially when you're running complex workloads. However there are 3 reasons you might prefer `tbl` as a cli tool:
+1. Compared to `duckdb`'s SQL, `tbl` has a cli-native syntax. This makes `tbl` much simpler to use with fewer keystrokes:
+    1. `duckdb "DESCRIBE read_parquet('test.parquet')"` vs `tbl schema test.parquet` 
+    2. `duckdb "SELECT * FROM read_parquet('test.parquet')"` vs `tbl test.parquet`
+    3. `duckdb "SELECT * FROM read_parquet('test.parquet') ORDER BY co1"` vs `tbl test.parquet --sort col1`
+2. Sometimes SQL can also be a very low-level language. `tbl` and `polars` let you operate on a higher level of abstraction which reduces cognitive load:
+    1. `duckdb`: `duckdb "SELECT col1, COUNT(col1) FROM read_parquet('test.parquet') GROUP BY col1"`
+    2. `tbl`: `tbl test.parquet --value-counts col1`
+3. Finally, `tbl` is built specifically for making it easy to manage large parquet archives. Features like `--tree`, `--inplace`, and multi-schema commands make life easier for the archive manager. 
