@@ -17,7 +17,7 @@ pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     }
 
     // exit early as needed
-    exit_early_if_needed(args.dry, args.confirm, &output_mode, &io);
+    exit_early_if_needed(args.dry, args.confirm, !args.no_summary, &output_mode, &io);
 
     // process each input output pair
     for (input_paths, output_path) in io.into_iter() {
@@ -102,23 +102,38 @@ fn gather_inputs_and_outputs(
 fn exit_early_if_needed(
     dry: bool,
     confirm: bool,
+    summary: bool,
     output_mode: &OutputMode,
     io: &[(Vec<PathBuf>, Option<PathBuf>)],
 ) {
     // exit if performing dry run
     if dry {
+        if summary {
+            println!();
+            println!();
+            tbl::formats::print_header("Data")
+        }
         println!("[dry run, exiting]");
         std::process::exit(0);
     }
 
     // exit if no files selected
     if io.is_empty() {
+        if summary {
+            println!();
+            println!();
+            tbl::formats::print_header("Data")
+        }
         println!("[no tabular files selected]");
         std::process::exit(0)
     };
 
     // exit if user does not confirm write operations
     if output_mode.writes_to_disk() & !confirm {
+        if summary {
+            println!();
+            println!();
+        }
         let prompt = "continue? ";
         if let Ok(true) = inquire::Confirm::new(prompt).with_default(false).prompt() {
         } else {

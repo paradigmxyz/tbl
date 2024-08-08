@@ -98,3 +98,10 @@ pub fn print_bullet_indent<A: AsRef<str>, B: AsRef<str>>(key: A, value: B, inden
         value_str
     );
 }
+
+/// print bullet as `    - key`
+pub fn print_bullet_key_indent<A: AsRef<str>>(key: A, indent: usize) {
+    let bullet_str = "- ".truecolor(TITLE_R, TITLE_G, TITLE_B);
+    let key_str = key.as_ref().white().bold();
+    println!("{}{}{}", " ".repeat(indent), bullet_str, key_str,);
+}

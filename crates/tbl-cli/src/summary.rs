@@ -1,5 +1,5 @@
 use crate::{DataArgs, OutputMode, TblCliError};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tbl::formats::{print_bullet, print_header};
 
 pub(crate) async fn print_summary(
@@ -19,9 +19,9 @@ pub(crate) async fn print_summary(
     }
 
     // compute total size of input files
-    let n_input_bytes = tbl::filesystem::get_total_bytes_of_files(all_input_files).await?;
+    let n_input_bytes = tbl::filesystem::get_total_bytes_of_files(&all_input_files).await?;
 
-    print_input_summary(n_input_files, n_input_bytes, args);
+    print_input_summary(n_input_files, &all_input_files, n_input_bytes, args);
     println!();
     println!();
     print_transform_summary(args);
@@ -31,10 +31,27 @@ pub(crate) async fn print_summary(
     Ok(())
 }
 
-fn print_input_summary(n_input_files: usize, n_input_bytes: u64, _args: &DataArgs) {
+fn print_input_summary(
+    n_input_files: usize,
+    input_files: &[&Path],
+    n_input_bytes: u64,
+    _args: &DataArgs,
+) {
     print_header("Inputs");
-    print_bullet("n_input_files", n_input_files.to_string());
     print_bullet("n_input_bytes", tbl::formats::format_bytes(n_input_bytes));
+    print_bullet(
+        "n_input_files",
+        tbl::formats::format_with_commas(n_input_files as u64),
+    );
+
+    let n_show_files = 10;
+    for path in input_files.iter().take(n_show_files) {
+        let path: String = path.to_string_lossy().to_string();
+        tbl::formats::print_bullet_key_indent(path, 4);
+    }
+    if input_files.len() > n_show_files {
+        tbl::formats::print_bullet_key_indent("...", 4);
+    }
 }
 
 fn print_transform_summary(args: &DataArgs) {
@@ -61,7 +78,7 @@ fn print_transform_summary(args: &DataArgs) {
     }
 }
 
-fn print_output_mode_summary(n_input_files: usize, output_mode: &OutputMode, _args: &DataArgs) {
+fn print_output_mode_summary(n_input_files: usize, output_mode: &OutputMode, args: &DataArgs) {
     print_header("Outputs");
     match output_mode {
         OutputMode::PrintToStdout => {
@@ -76,6 +93,9 @@ fn print_output_mode_summary(n_input_files: usize, output_mode: &OutputMode, _ar
                 n_input_files
             );
             print_bullet("summary", summary);
+            if let Some(output_file) = &args.output_file {
+                print_bullet("output_file", output_file.to_string_lossy());
+            }
         }
         OutputMode::SaveToDirectory => {
             print_bullet("output_mode", "SAVE_TO_NEW_DIR");
@@ -84,6 +104,9 @@ fn print_output_mode_summary(n_input_files: usize, output_mode: &OutputMode, _ar
                 n_input_files
             );
             print_bullet("summary", summary);
+            if let Some(output_dir) = &args.output_dir {
+                print_bullet("output_dir", output_dir.to_string_lossy());
+            }
         }
         OutputMode::ModifyInplace => {
             print_bullet("output_mode", "MODIFY_INPLACE");
@@ -113,87 +136,3 @@ fn print_output_mode_summary(n_input_files: usize, output_mode: &OutputMode, _ar
         }
     }
 }
-
-//
-// // general
-//
-
-// async fn print_drop_summary(
-//     args: &DropArgs,
-//     inputs: &[PathBuf],
-//     outputs: &[PathBuf],
-// ) -> Result<(), TblCliError> {
-//     // print files
-//     let n_show_files = 10;
-//     println!("files:");
-//     if args.inputs.paths.is_none() {
-//         let cwd = std::env::current_dir()?;
-//         for path in inputs.iter().take(n_show_files) {
-//             println!(
-//                 "- {}",
-//                 path.strip_prefix(cwd.clone())?
-//                     .to_string_lossy()
-//                     .colorize_string()
-//             );
-//         }
-//     } else {
-//         for path in inputs.iter().take(n_show_files) {
-//             println!("- {}", path.to_string_lossy().colorize_string());
-//         }
-//     }
-//     if inputs.len() > n_show_files {
-//         println!("...");
-//     }
-
-//     // print summary
-//     let first_column = if let Some(first_column) = args.columns.first() {
-//         first_column.clone()
-//     } else {
-//         return Err(TblCliError::Arg(
-//             "must specify column(s) to drop".to_string(),
-//         ));
-//     };
-//     let mut columns_str = first_column.colorize_variable().bold();
-//     for column in args.columns.iter().skip(1) {
-//         columns_str = format!("{}, {}", columns_str, column.colorize_variable().bold()).into()
-//     }
-//     let column_str = if args.columns.len() == 1 {
-//         "column"
-//     } else {
-//         "columns"
-//     };
-//     let file_str = if inputs.len() == 1 { "file" } else { "files" };
-
-//     let output_location = if let Some(output_dir) = args.output_dir.as_ref() {
-//         format!(
-//             "\nwriting outputs to directory {}",
-//             output_dir.to_string_lossy().colorize_string()
-//         )
-//     } else {
-//         ", editing files inplace".to_string()
-//     };
-
-//     println!();
-//     println!(
-//         "dropping {} {} from {} {}{}",
-//         column_str,
-//         columns_str,
-//         tbl::formats::format_with_commas(inputs.len() as u64)
-//             .colorize_constant()
-//             .bold(),
-//         file_str,
-//         output_location
-//     );
-
-//     if args.output_dir.is_some() {
-//         let n_existing = tbl::filesystem::count_existing_files(outputs).await;
-//         if n_existing > 0 {
-//             println!(
-//                 "{} of the output files already exist and will be overwritten",
-//                 tbl::formats::format_with_commas(n_existing as u64).colorize_constant(),
-//             );
-//         }
-//     }
-
-//     Ok(())
-// }

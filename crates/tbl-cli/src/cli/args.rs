@@ -66,10 +66,10 @@ pub(crate) struct Cli {
 #[derive(Clone, Subcommand)]
 #[command()]
 pub(crate) enum Subcommands {
-    /// Display list of tabular files
+    /// Display list of tabular files, similar to the cli `ls` command
     Ls(LsArgs),
 
-    /// Display each schema present among selected files
+    /// Display table representation of each schema in the selected files
     Schema(SchemaArgs),
 
     /// Display single summary of all schemas
@@ -201,36 +201,74 @@ pub(crate) struct DataArgs {
     //
     // // transform options
     //
-    /// add new columns, syntax NAME:TYPE [alias = `--with`]
-    #[clap(long, help_heading = "Transform Options", value_name="NEW_COLS", num_args(1..), aliases = ["with"])]
-    pub(crate) with_columns: Option<Vec<String>>,
-
-    /// select only these columns
-    #[clap(long, help_heading = "Transform Options", num_args(1..))]
+    /// select only these columns [alias --columns]
+    #[clap(
+        long,
+        help = cstr!("select only these columns [alias <white><bold>--columns</bold></white>]"),
+        help_heading = "Transform Options",
+        aliases = ["columns"],
+        num_args(1..)
+    )]
     pub(crate) select: Option<Vec<String>>,
 
     /// drop column(s)
     #[clap(long, help_heading = "Transform Options", num_args(1..))]
     pub(crate) drop: Option<Vec<String>>,
 
+    /// add new columns, syntax NAME:TYPE [alias --with]
+    #[clap(
+        long,
+        help = cstr!("add new columns, syntax <white><bold>NAME:TYPE</bold></white> [alias <white><bold>--with</bold></white>]"),
+        help_heading = "Transform Options",
+        value_name="NEW_COLS",
+        num_args(1..),
+        aliases = ["with"]
+    )]
+    pub(crate) with_columns: Option<Vec<String>>,
+
     /// rename column(s), syntax OLD_NAME=NEW_NAME
-    #[clap(long, help_heading = "Transform Options", num_args(1..))]
+    #[clap(
+        long,
+        help = cstr!("rename column(s), syntax <white><bold>OLD_NAME=NEW_NAME</bold></white>"),
+        help_heading = "Transform Options",
+        num_args(1..)
+    )]
     pub(crate) rename: Option<Vec<String>>,
 
     /// change column type(s), syntax COLUMN=TYPE
-    #[clap(long, help_heading = "Transform Options", num_args(1..))]
+    #[clap(
+        long,
+        help = cstr!("change column type(s), syntax <white><bold>COLUMN=TYPE</bold></white>"),
+        help_heading = "Transform Options",
+        num_args(1..)
+    )]
     pub(crate) cast: Option<Vec<String>>,
 
     /// filter rows by values, syntax COLUMN=VALUE
-    #[clap(long, help_heading = "Transform Options", num_args(1..))]
+    #[clap(
+        long,
+        help = cstr!("filter rows by values, syntax <white><bold>COLUMN=VALUE</bold></white>"),
+        help_heading = "Transform Options",
+        num_args(1..)
+    )]
     pub(crate) filter: Option<Vec<String>>,
 
-    /// sort rows, sytax COLUMN[:desc]
-    #[clap(long, help_heading = "Transform Options", num_args(1..))]
+    /// sort rows, syntax COLUMN[:desc]
+    #[clap(
+        long,
+        help = cstr!("sort rows, syntax <white><bold>COLUMN[:desc]</bold></white>"),
+        help_heading = "Transform Options",
+        num_args(1..)
+    )]
     pub(crate) sort: Option<Vec<String>>,
 
-    /// keep only the first n rows [alias = `--limit`]
-    #[clap(long, aliases = ["limit"], help_heading = "Transform Options")]
+    /// keep only the first n rows [alias --limit]
+    #[clap(
+        long,
+        help = cstr!("keep only the first n rows [alias <white><bold>--limit</bold></white>]"),
+        help_heading = "Transform Options",
+        aliases = ["limit"]
+    )]
     pub(crate) head: Option<usize>,
 
     /// keep only the last n rows
@@ -305,7 +343,11 @@ pub(crate) struct DataArgs {
     pub(crate) lf: bool,
 
     /// python executable to use with --df or --lf
-    #[clap(long, help_heading = "Output Options")]
+    #[clap(
+        long,
+        help = cstr!("python executable to use with <white><bold>--df</bold></white> or <white><bold>--lf</bold></white>"),
+        help_heading = "Output Options"
+    )]
     pub(crate) executable: Option<String>,
 
     /// confirm that files should be edited

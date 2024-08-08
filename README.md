@@ -239,7 +239,17 @@ General Options:
 
 ## FAQ
 
-What other tools exist for interacting with parquet from the command line?
+**What is the plan for `tbl`?**
+
+There are a few features that we are currently exploring:
+1. **S3 and cloud buckets**: ability to read and write parquet files with all the same operations that can be done with local files
+2. **Re-partitioning**: ability to change how a set of parquet files are partitioned, such as changing the partition key or partition size
+3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
+
+**What other tools exist for interacting with parquet from the command line?**
+
+Check out these other tools that can be used for interacting with parquet files:
 - [duckdb](https://duckdb.org/docs/api/cli/overview)
 - [pqrs](https://github.com/manojkarthick/pqrs)
 - [parquet-cli](https://github.com/apache/parquet-java/blob/master/parquet-cli/README.md)
+
