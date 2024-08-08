@@ -3,9 +3,14 @@
 
 `tbl` is a tool for reading and editing tabular data files like parquet
 
-Goals of `tbl`:
+#### Goals of `tbl`:
 - make it effortless to read, edit, and manage parquet datasets
 - use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already know `tbl`
+
+#### Example use cases:
+- quickly look up schemas, row counts, and per-column storage usage
+- migrate from one schema to another, like add/remove/rename a column
+- perform these operations on multiple files in parallel
 
 ## Contents
 1. [Installation](#installation)
@@ -16,7 +21,14 @@ Goals of `tbl`:
     4. [Performing edits](#performing-edits)
     5. [Selecting output mode](#selecting-output-mode)
 4. [API Reference](#api-reference)
-5. [FAQ](#faq)
+    1. [`tbl`](#tbl)
+    2. [`tbl ls`](#tbl-ls)
+    3. [`tbl schema`](#tbl-schema)
+6. [FAQ](#faq)
+    1. [What is parquet?](#what-is-parquet)
+    2. [What other parquet cli tools exist?](#what-other-parquet-cli-tools-exist)
+    3. [Why use `tbl` when `duckdb` has a cli?](#why-use-tbl-when-duckdb-has-a-cli)
+    4. [What is the plan for `tbl`?](#what-is-the-plan-for-tbl)
 
 ## Installation
 
@@ -74,11 +86,11 @@ These input selection options can be used with each `tbl` subcommand:
 
 |  | option |
 | --- | --- |
-| select all tabular files in current directory | (default behavior) |
-| select a single file | `tbl /path/to/file.parquet` |
-| select files using a glob | `tbl *.parquet` |
-| select files from multiple directories | `tbl /path/to/dir1 /path/to/dir2` |
-| select files recursively | `tbl /path/to/dir --tree` |
+| Select all tabular files in current directory | (default behavior) |
+| Select a single file | `tbl /path/to/file.parquet` |
+| Select files using a glob | `tbl *.parquet` |
+| Select files from multiple directories | `tbl /path/to/dir1 /path/to/dir2` |
+| Select files recursively | `tbl /path/to/dir --tree` |
 
 ### Performing edits
 
@@ -96,18 +108,19 @@ These input selection options can be used with each `tbl` subcommand:
 
 ### Selecting output mode
 
-`tbl` can output its results in many different forms:
+`tbl` can output its results in many different modes:
 
 | mode | description | `tbl` option |
 | --- | --- | --- |
-| single file | output all results to single file | `--output-file /path/to/file.parquet` |
-| inplace | modify each file inplace | `--inplace` |
-| new directory | create equivalent files in a new directory | `--output-dir /path/to/dir` |
-| interactive | load dataframe in interactive python session | `--df` |
-| stdout | output data to stdout | (default behavior) |
+| Single File | output all results to single file | `--output-file /path/to/file.parquet` |
+| Inplace | modify each file inplace | `--inplace` |
+| New Directory | create equivalent files in a new directory | `--output-dir /path/to/dir` |
+| Interactive | load dataframe in interactive python session | `--df` |
+| Stdout | output data to stdout | (default behavior) |
 
 ## API Reference
 
+#### `tbl`
 ##### Output of `tbl -h`:
 
 ```markdown
@@ -122,9 +135,8 @@ Get help with SUMMARY_OPTIONS using tbl [ls | schema | schemas] -h
 Data mode is the default mode. DATA_OPTIONS are documented below
 
 Optional Subcommands:
-  ls       Display list of tabular files
-  schema   Display each schema present among selected files
-  schemas  Display single summary of all schemas
+  ls      Display list of tabular files, similar to the cli `ls` command
+  schema  Display table representation of each schema in the selected files
 
 General Options:
   -h, --help                        display help message
@@ -135,14 +147,14 @@ Input Options:
   -t, --tree                        recursively use all files in tree as inputs
 
 Transform Options:
-      --with-columns <NEW_COLS>...  add new columns, syntax NAME:TYPE [alias = `--with`]
-      --select <SELECT>...          select only these columns
+      --select <SELECT>...          select only these columns [alias --columns]
       --drop <DROP>...              drop column(s)
+      --with-columns <NEW_COLS>...  insert columns, syntax NAME:TYPE [alias --with]
       --rename <RENAME>...          rename column(s), syntax OLD_NAME=NEW_NAME
       --cast <CAST>...              change column type(s), syntax COLUMN=TYPE
       --filter <FILTER>...          filter rows by values, syntax COLUMN=VALUE
-      --sort <SORT>...              sort rows, sytax COLUMN[:desc]
-      --head <HEAD>                 keep only the first n rows [alias = `--limit`]
+      --sort <SORT>...              sort rows, syntax COLUMN[:desc]
+      --head <HEAD>                 keep only the first n rows [alias --limit]
       --tail <TAIL>                 keep only the last n rows
       --offset <OFFSET>             skip the first n rows of table
       --value-counts <COLUMN>       compute value counts of column(s)
@@ -165,8 +177,16 @@ Output Options:
       --executable <EXECUTABLE>     python executable to use with --df or --lf
       --confirm                     confirm that files should be edited
       --dry                         dry run without editing files
+
+Output Modes:
+1. output results into single file  --output-file /path/to/file.parquet
+2. modify each file inplace         --inplace
+3. copy files into a new dir        --output-dir /path/to/dir
+4. load interactive python session  --df | --lf
+5. output data to stdout            (default behavior)
 ```
 
+#### `tbl ls`
 ##### Output of `tbl ls -h`:
 
 ```markdown
@@ -189,6 +209,7 @@ General Options:
   -h, --help  display help message
 ```
 
+#### `tbl schema`
 ##### Output of `tbl schema -h`:
 
 ```markdown
@@ -215,26 +236,30 @@ General Options:
 
 ## FAQ
 
-### What is the plan for `tbl`?
+### What is parquet?
 
-There are a few features that we are currently exploring:
-1. **S3 and cloud buckets**: ability to read and write parquet files with all the same operations that can be done with local files
-2. **Re-partitioning**: ability to change how a set of parquet files are partitioned, such as changing the partition key or partition size
-3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
-4. **Performance optimization**: there's always room to make things faster
+[Parquet](https://en.wikipedia.org/wiki/Apache_Parquet) is a file format for storing tabular datasets. In many cases parquet is a simpler and faster alternative to using an actual database. Parquet has become an industry standard and its ecosystem of tools is growing rapidly.
 
-### What other tools exist for interacting with parquet from the command line?
+### What other parquet cli tools exist?
 
 The most common tools are [`duckdb`](https://duckdb.org/docs/api/cli/overview), [`pqrs`](https://github.com/manojkarthick/pqrs), and [`parquet-cli`](https://github.com/apache/parquet-java/blob/master/parquet-cli/README.md).
 
-### Why build `tbl` when `duckdb` has a cli?
+### Why use `tbl` when `duckdb` has a cli?
 
-`duckdb` is an incredible tool and we recommend checking it out, especially when you're running complex workloads. However there are 3 reasons you might prefer `tbl` as a cli tool:
-1. Compared to `duckdb`'s SQL, `tbl` has a cli-native syntax. This makes `tbl` much simpler to use with fewer keystrokes:
+`duckdb` is an incredible tool. We recommend checking it out, especially when you're running complex workloads. However there are 3 reasons you might prefer `tbl` as a cli tool:
+1. **CLI-Native:** Compared to `duckdb`'s SQL, `tbl` has a cli-native syntax. This makes `tbl` simpler to use with fewer keystrokes:
     1. `duckdb "DESCRIBE read_parquet('test.parquet')"` vs `tbl schema test.parquet` 
     2. `duckdb "SELECT * FROM read_parquet('test.parquet')"` vs `tbl test.parquet`
     3. `duckdb "SELECT * FROM read_parquet('test.parquet') ORDER BY co1"` vs `tbl test.parquet --sort col1`
-2. Sometimes SQL can also be a very low-level language. `tbl` and `polars` let you operate on a higher level of abstraction which reduces cognitive load:
+2. **High Level vs Low Level:** Sometimes SQL can also be a very low-level language. `tbl` and `polars` let you operate on a higher level of abstraction which reduces cognitive load:
     1. `duckdb`: `duckdb "SELECT col1, COUNT(col1) FROM read_parquet('test.parquet') GROUP BY col1"`
     2. `tbl`: `tbl test.parquet --value-counts col1`
-3. Finally, `tbl` is built specifically for making it easy to manage large parquet archives. Features like `--tree`, `--inplace`, and multi-schema commands make life easier for the archive manager. 
+3. **Operational QoL:** `tbl` is built specifically for making it easy to manage large parquet archives. Features like `--tree`, `--inplace`, and multi-schema commands make life easier for archive management.
+
+### What is the plan for `tbl`?
+
+There are a few features that we are currently exploring:
+1. **S3 and cloud buckets**: ability to read and write parquet files with the same operations that can be done performed on local files
+2. **Re-partitioning**: ability to change how a set of parquet files are partitioned, such as changing the partition key or partition size
+3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
+4. **Performance optimization**: there's always room to make things faster
