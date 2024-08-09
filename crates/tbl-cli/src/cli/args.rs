@@ -297,6 +297,15 @@ pub(crate) struct DataArgs {
     #[clap(long, help_heading = "Output Options")]
     pub(crate) no_summary: bool,
 
+    /// number of rows to print in stdout, all for all
+    #[clap(
+        short,
+        long,
+        help = cstr!("number of rows to print in stdout, <white><bold>all</bold></white> for all"),
+        help_heading = "Output Options"
+    )]
+    pub(crate) n: Option<String>,
+
     /// output data as csv
     #[clap(long, help_heading = "Output Options")]
     pub(crate) csv: bool,
@@ -304,6 +313,10 @@ pub(crate) struct DataArgs {
     /// output data as json
     #[clap(long, help_heading = "Output Options")]
     pub(crate) json: bool,
+
+    /// output data as json lines
+    #[clap(long, help_heading = "Output Options")]
+    pub(crate) jsonl: bool,
 
     /// modify files in place
     #[clap(long, help_heading = "Output Options")]

@@ -31,6 +31,10 @@ pub(crate) enum TblCliError {
     #[error("Argument error: {0}")]
     MissingSchemaError(String),
 
+    /// Error parsing an int
+    #[error(transparent)]
+    ParseIntError(#[from] std::num::ParseIntError),
+
     /// General Error
     #[error("Input error: {0}")]
     Error(String),

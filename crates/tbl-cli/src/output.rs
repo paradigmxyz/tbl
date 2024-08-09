@@ -1,6 +1,10 @@
+use crate::styles::FontStyle;
 use crate::{DataArgs, OutputMode, TblCliError};
+use color_print::cstr;
 use polars::prelude::*;
+use std::io::stdout;
 use std::path::PathBuf;
+use toolstr::Colorize;
 
 pub(crate) fn output_lazyframe(
     lf: LazyFrame,
@@ -21,21 +25,87 @@ pub(crate) fn output_lazyframe(
 }
 
 fn print_lazyframe(lf: LazyFrame, args: &DataArgs) -> Result<(), TblCliError> {
-    // match (args.csv, args.json) {
-    //     (false, false) => {}
-    //     (true, false) => {}
-    //     (false, true) => {}
-    //     (true, true) => {}
-    // };
-    let df = lf.collect()?;
+    let mut df = lf.collect()?;
 
     if !args.no_summary {
         println!();
         println!();
         tbl_core::formats::print_header("Data");
     };
-    println!("{}", df);
+
+    let n_show = match &args.n {
+        Some(n) if n == "all" => df.height(),
+        Some(n) => n.parse::<usize>()?,
+        None => 20,
+    };
+    let n_missing = df.height() - n_show;
+
+    if args.csv {
+        let df = binary_to_hex(&mut df)?;
+        print_dataframe_as_csv(&df, n_show)?;
+    } else if args.json | args.jsonl {
+        let df = binary_to_hex(&mut df)?;
+        print_dataframe_as_json(&df, n_show, args.jsonl)?;
+    } else {
+        let df = df.head(Some(n_show));
+        println!("{}", df);
+    };
+
+    if n_missing > 0 {
+        println!(
+            "{} rows omitted, use {} to show all rows",
+            n_missing.to_string().colorize_constant().bold(),
+            cstr!("<white><bold>-n all</bold></white>")
+        );
+    }
+
     Ok(())
+}
+
+fn print_dataframe_as_csv(df: &DataFrame, n: usize) -> Result<(), PolarsError> {
+    let mut writer = CsvWriter::new(stdout());
+    let df: DataFrame = df.head(Some(n));
+    writer.finish(&mut df.clone())
+}
+
+fn print_dataframe_as_json(df: &DataFrame, n: usize, jsonl: bool) -> Result<(), PolarsError> {
+    let mut writer = JsonWriter::new(stdout());
+
+    if !jsonl {
+        writer = writer.with_json_format(polars::prelude::JsonFormat::Json);
+    };
+
+    let df: DataFrame = df.head(Some(n));
+    let result = writer.finish(&mut df.clone());
+
+    if !jsonl {
+        println!()
+    };
+
+    result
+}
+
+fn binary_to_hex(df: &mut DataFrame) -> Result<DataFrame, PolarsError> {
+    let mut df = df.clone();
+
+    let binary_columns: Vec<String> = df
+        .get_columns()
+        .iter()
+        .filter_map(|s| {
+            if matches!(s.dtype(), DataType::Binary) {
+                Some(s.name().to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    for col_name in binary_columns {
+        let hex_col = df.column(&col_name)?.binary()?.hex_encode().into_series();
+        df = df.with_column(hex_col)?.clone();
+    }
+
+    Ok(df)
 }
 
 fn save_lf_to_disk(
