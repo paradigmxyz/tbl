@@ -218,8 +218,6 @@ Arguments:
 Options:
   -t, --tree         recursively list all files in tree
       --absolute     show absolute paths instead of relative
-      --bytes        display bytes stats
-      --stats        display stats of each schema group
       --n <N>        number of file names to print
       --sort <SORT>  sort by number of rows, files, or bytes [default: bytes]
 
@@ -240,8 +238,6 @@ Arguments:
 
 Options:
   -t, --tree               recursively list all files in tree
-      --bytes              display bytes stats
-      --stats              display stats of each schema group
       --columns <COLUMNS>  columns to print
       --n <N>              number of schemas to print
       --examples           show examples

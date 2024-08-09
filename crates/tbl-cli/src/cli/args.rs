@@ -107,11 +107,11 @@ pub(crate) struct LsArgs {
     pub(crate) absolute: bool,
 
     /// display bytes stats
-    #[clap(long)]
+    #[clap(long, hide = true)]
     pub(crate) bytes: bool,
 
     /// display stats of each schema group
-    #[clap(long)]
+    #[clap(long, hide = true)]
     pub(crate) stats: bool,
 
     /// number of file names to print
@@ -139,11 +139,11 @@ pub(crate) struct SchemaArgs {
     pub(crate) tree: bool,
 
     /// display bytes stats
-    #[clap(long)]
+    #[clap(long, hide = true)]
     pub(crate) bytes: bool,
 
     /// display stats of each schema group
-    #[clap(long)]
+    #[clap(long, hide = true)]
     pub(crate) stats: bool,
 
     /// columns to print

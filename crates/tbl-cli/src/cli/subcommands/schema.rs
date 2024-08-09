@@ -192,6 +192,7 @@ fn print_schemas(
 
         if let Some(example_paths) = example_paths.as_ref() {
             if let Some(paths_vec) = example_paths.get(&summary.schema) {
+                println!();
                 if n_example_paths == 1 {
                     println!("{}", "Example path".colorize_title());
                 } else {
@@ -210,9 +211,6 @@ fn print_schemas(
         if i < n_to_show - 1 {
             println!();
             println!();
-            if example_paths.is_some() {
-                println!();
-            }
         }
     }
     if n_to_show < n_schemas {
