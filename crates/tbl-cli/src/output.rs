@@ -32,7 +32,7 @@ fn print_lazyframe(lf: LazyFrame, args: &DataArgs) -> Result<(), TblCliError> {
     if !args.no_summary {
         println!();
         println!();
-        tbl::formats::print_header("Data");
+        tbl_core::formats::print_header("Data");
     };
     println!("{}", df);
     Ok(())

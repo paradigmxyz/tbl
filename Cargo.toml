@@ -1,6 +1,6 @@
 
 [workspace]
-members = ["crates/tbl", "crates/tbl-cli"]
+members = ["crates/tbl-core", "crates/tbl-cli"]
 resolver = "2"
 
 [workspace.package]

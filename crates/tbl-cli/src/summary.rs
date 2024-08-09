@@ -1,6 +1,6 @@
 use crate::{DataArgs, OutputMode, TblCliError};
 use std::path::{Path, PathBuf};
-use tbl::formats::{print_bullet, print_header};
+use tbl_core::formats::{print_bullet, print_header};
 
 pub(crate) async fn print_summary(
     inputs_and_outputs: &[(Vec<PathBuf>, Option<PathBuf>)],
@@ -19,7 +19,7 @@ pub(crate) async fn print_summary(
     }
 
     // compute total size of input files
-    let n_input_bytes = tbl::filesystem::get_total_bytes_of_files(&all_input_files).await?;
+    let n_input_bytes = tbl_core::filesystem::get_total_bytes_of_files(&all_input_files).await?;
 
     print_input_summary(n_input_files, &all_input_files, n_input_bytes, args);
     println!();
@@ -38,19 +38,19 @@ fn print_input_summary(
     _args: &DataArgs,
 ) {
     print_header("Inputs");
-    print_bullet("n_input_bytes", tbl::formats::format_bytes(n_input_bytes));
+    print_bullet("n_input_bytes", tbl_core::formats::format_bytes(n_input_bytes));
     print_bullet(
         "n_input_files",
-        tbl::formats::format_with_commas(n_input_files as u64),
+        tbl_core::formats::format_with_commas(n_input_files as u64),
     );
 
     let n_show_files = 10;
     for path in input_files.iter().take(n_show_files) {
         let path: String = path.to_string_lossy().to_string();
-        tbl::formats::print_bullet_key_indent(path, 4);
+        tbl_core::formats::print_bullet_key_indent(path, 4);
     }
     if input_files.len() > n_show_files {
-        tbl::formats::print_bullet_key_indent("...", 4);
+        tbl_core::formats::print_bullet_key_indent("...", 4);
     }
 }
 

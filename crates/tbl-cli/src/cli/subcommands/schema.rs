@@ -4,15 +4,15 @@ use polars::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tbl::formats::{format_bytes, format_with_commas};
-use tbl::parquet::{combine_tabular_summaries, summarize_by_schema, TabularSummary};
+use tbl_core::formats::{format_bytes, format_with_commas};
+use tbl_core::parquet::{combine_tabular_summaries, summarize_by_schema, TabularSummary};
 use toolstr::Colorize;
 
 pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TblCliError> {
     // get schemas
-    let paths = tbl::filesystem::get_input_paths(&args.paths, args.tree, true)?;
-    let summaries = tbl::parquet::get_parquet_summaries(&paths).await?;
-    let ref_summaries: Vec<&tbl::parquet::TabularSummary> = summaries.iter().collect();
+    let paths = tbl_core::filesystem::get_input_paths(&args.paths, args.tree, true)?;
+    let summaries = tbl_core::parquet::get_parquet_summaries(&paths).await?;
+    let ref_summaries: Vec<&tbl_core::parquet::TabularSummary> = summaries.iter().collect();
     let by_schema = summarize_by_schema(ref_summaries.as_slice())?;
 
     // summarize entire set
@@ -22,7 +22,7 @@ pub(crate) async fn schema_command(args: SchemaArgs) -> Result<(), TblCliError> 
     let paths = if args.absolute {
         paths
     } else {
-        let common_prefix = tbl::filesystem::get_common_prefix(&paths)?;
+        let common_prefix = tbl_core::filesystem::get_common_prefix(&paths)?;
         let mut new_paths = Vec::new();
         for path in paths {
             new_paths.push(path.strip_prefix(&common_prefix)?.to_owned())

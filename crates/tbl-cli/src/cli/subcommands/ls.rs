@@ -3,7 +3,7 @@ use toolstr::Colorize;
 
 pub(crate) async fn ls_command(ls_args: LsArgs) -> Result<(), TblCliError> {
     // get paths
-    let paths = tbl::filesystem::get_input_paths(&ls_args.paths, ls_args.tree, true)?;
+    let paths = tbl_core::filesystem::get_input_paths(&ls_args.paths, ls_args.tree, true)?;
 
     if paths.is_empty() {
         println!("[no tabular paths]");
@@ -28,7 +28,7 @@ fn print_file_names(
     let display_paths = if absolute {
         paths.to_vec()
     } else {
-        let common_prefix = tbl::filesystem::get_common_prefix(paths)?;
+        let common_prefix = tbl_core::filesystem::get_common_prefix(paths)?;
         let mut new_paths = Vec::new();
         for path in paths.iter() {
             new_paths.push(path.strip_prefix(&common_prefix)?.to_owned())
@@ -61,7 +61,7 @@ fn print_file_names(
             "{}",
             format!(
                 "... {} files not shown",
-                tbl::formats::format_with_commas((paths.len() - n_print) as u64).bold()
+                tbl_core::formats::format_with_commas((paths.len() - n_print) as u64).bold()
             )
             .truecolor(150, 150, 150)
         );
@@ -81,16 +81,16 @@ async fn print_stats(paths: &[std::path::PathBuf]) -> Result<(), TblCliError> {
     // get row counts
     let path_refs: Vec<&std::path::Path> =
         paths.iter().map(|path_buf| path_buf.as_path()).collect();
-    let row_counts = tbl::parquet::get_parquet_row_counts(&path_refs).await?;
+    let row_counts = tbl_core::parquet::get_parquet_row_counts(&path_refs).await?;
 
     // print total summary
     println!(
         "{} rows stored in {} across {} tabular files",
-        tbl::formats::format_with_commas(row_counts.iter().sum())
+        tbl_core::formats::format_with_commas(row_counts.iter().sum())
             .green()
             .bold(),
-        tbl::formats::format_bytes(total_size).green().bold(),
-        tbl::formats::format_with_commas(paths.len() as u64)
+        tbl_core::formats::format_bytes(total_size).green().bold(),
+        tbl_core::formats::format_with_commas(paths.len() as u64)
             .green()
             .bold()
     );

@@ -15,7 +15,7 @@ path = "src/main.rs"
 clap = { version = "4.4.8", features = ["derive"] }
 tokio = { workspace = true }
 thiserror = { workspace = true }
-tbl = { version = "0.1.0", path = "../tbl" }
+tbl-core = { version = "0.1.0", path = "../tbl-core" }
 term_size = "0.3.2"
 polars = { workspace = true }
 toolstr = "0.1.5"

@@ -1,6 +1,6 @@
 use crate::{DataArgs, OutputMode, TblCliError};
 use std::path::PathBuf;
-use tbl::filesystem::{get_input_paths, get_output_paths, OutputPathSpec};
+use tbl_core::filesystem::{get_input_paths, get_output_paths, OutputPathSpec};
 
 pub(crate) async fn data_command(args: DataArgs) -> Result<(), TblCliError> {
     inquire::set_global_render_config(crate::styles::get_render_config());
@@ -111,7 +111,7 @@ fn exit_early_if_needed(
         if summary {
             println!();
             println!();
-            tbl::formats::print_header("Data")
+            tbl_core::formats::print_header("Data")
         }
         println!("[dry run, exiting]");
         std::process::exit(0);
@@ -122,7 +122,7 @@ fn exit_early_if_needed(
         if summary {
             println!();
             println!();
-            tbl::formats::print_header("Data")
+            tbl_core::formats::print_header("Data")
         }
         println!("[no tabular files selected]");
         std::process::exit(0)
@@ -150,7 +150,7 @@ fn process_io(
     args: &DataArgs,
 ) -> Result<(), TblCliError> {
     // create lazy frame
-    let lf = tbl::parquet::create_lazyframe(&input_paths)?;
+    let lf = tbl_core::parquet::create_lazyframe(&input_paths)?;
 
     // transform into output frames
     let lf = crate::transform::apply_transformations(lf, args)?;

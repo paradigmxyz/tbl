@@ -32,7 +32,17 @@
 
 ## Installation
 
-`cargo install tbl`
+##### Install from crates.io
+```bash
+cargo install tbl-cli
+```
+
+##### Install from source:
+```bash
+git clone https://github.com/paradigmxyz/tbl
+cd tbl
+cargo install --path crates/tbl-cli
+```
 
 ## Example Usage
 
