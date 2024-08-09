@@ -358,31 +358,31 @@ mod tests {
     use std::fs::{self, File};
     use tempfile::TempDir;
 
-    fn create_test_file_tree() -> TempDir {
-        let temp_dir = TempDir::new().unwrap();
+    fn create_test_file_tree() -> Result<TempDir, TblError> {
+        let temp_dir = TempDir::new()?;
         println!("Created temporary directory: {:?}", temp_dir.path());
         let root = temp_dir.path().join("root");
 
-        fs::create_dir(&root).unwrap();
-        File::create(root.join("super_data_a.parquet")).unwrap();
-        File::create(root.join("super_data_b.parquet")).unwrap();
+        fs::create_dir(&root)?;
+        File::create(root.join("super_data_a.parquet"))?;
+        File::create(root.join("super_data_b.parquet"))?;
 
         let data1 = root.join("data1");
-        fs::create_dir(&data1).unwrap();
-        File::create(data1.join("data1_a.parquet")).unwrap();
-        File::create(data1.join("data1_b.parquet")).unwrap();
+        fs::create_dir(&data1)?;
+        File::create(data1.join("data1_a.parquet"))?;
+        File::create(data1.join("data1_b.parquet"))?;
 
         let sub_data1_1 = data1.join("sub_data1_1");
-        fs::create_dir(&sub_data1_1).unwrap();
-        File::create(sub_data1_1.join("sub_data1_a.parquet")).unwrap();
-        File::create(sub_data1_1.join("sub_data1_b.parquet")).unwrap();
+        fs::create_dir(&sub_data1_1)?;
+        File::create(sub_data1_1.join("sub_data1_a.parquet"))?;
+        File::create(sub_data1_1.join("sub_data1_b.parquet"))?;
 
         let data2 = root.join("data2");
-        fs::create_dir(&data2).unwrap();
-        File::create(data2.join("data2_a.parquet")).unwrap();
-        File::create(data2.join("data2_b.parquet")).unwrap();
+        fs::create_dir(&data2)?;
+        File::create(data2.join("data2_a.parquet"))?;
+        File::create(data2.join("data2_b.parquet"))?;
 
-        temp_dir
+        Ok(temp_dir)
     }
 
     struct TestCase {
@@ -395,12 +395,12 @@ mod tests {
         ($($name:ident: $value:expr,)*) => {
             $(
                 #[test]
-                fn $name() {
+                fn $name() -> Result<(), TblError> {
                     let test_case: TestCase = $value;
                     let mut spec = test_case.spec;
 
                     // Create temporary directory and add its path to inputs and output_dir
-                    let temp_dir = create_test_file_tree();
+                    let temp_dir = create_test_file_tree()?;
                     let temp_path = temp_dir.path().to_path_buf();
 
                     // Update inputs with temporary directory path
@@ -415,7 +415,10 @@ mod tests {
                         spec.output_dir = Some(temp_path.join(output_dir));
                     }
 
-                    let (_inputs, outputs) = get_output_paths(spec).unwrap();
+                    let (_inputs, outputs) = match get_output_paths(spec) {
+                        Ok((inputs, outputs)) => (inputs, outputs),
+                        Err(e) => return Err(TblError::Error(format!("{}", e).to_string())),
+                    };
 
                     let expected_outputs: Vec<PathBuf> = test_case.expected_outputs
                         .into_iter()
@@ -434,6 +437,8 @@ mod tests {
                         sorted_expected_outputs,
                         sorted_outputs
                         );
+
+                    Ok(())
                 }
             )*
         }

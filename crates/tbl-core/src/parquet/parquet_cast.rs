@@ -9,6 +9,7 @@ use std::path::PathBuf;
 // use std::sync::Arc;
 // use tokio::fs::File;
 // use tokio::io::AsyncWriteExt;
+use crate::types::TblError;
 
 /// cast columns of parquet file to new type
 pub async fn cast_parquet_columns(
@@ -17,7 +18,7 @@ pub async fn cast_parquet_columns(
     _columns_to_cast: HashMap<String, DataType>,
     _batch_size: usize,
 ) -> Result<(), crate::TblError> {
-    panic!("not implemented")
+    Err(TblError::Error("not implemented".to_string()))
     // // Create a LazyFrame from the input Parquet file
     // let lf = LazyFrame::scan_parquet(
     //     input_path.to_str().ok_or_else(|| crate::TblError::Error("Invalid input path".to_string()))?,

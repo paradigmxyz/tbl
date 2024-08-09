@@ -108,7 +108,7 @@ pub async fn drop_parquets_columns(
             let columns_to_drop = columns_to_drop.clone();
             let sem = Arc::clone(&semaphore);
             async move {
-                let _permit = sem.acquire().await.unwrap();
+                let _permit = sem.acquire().await?;
                 drop_parquet_columns(input, output, columns_to_drop, batch_size).await
             }
         })

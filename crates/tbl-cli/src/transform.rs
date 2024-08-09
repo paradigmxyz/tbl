@@ -118,7 +118,7 @@ fn create_value_expr(value: &str, dtype: &DataType) -> Result<Expr, TblCliError>
                 })?;
             Ok(lit(naive_date
                 .and_hms_opt(0, 0, 0)
-                .unwrap()
+                .ok_or_else(|| TblCliError::Error("Failed to create NaiveDateTime".to_string()))?
                 .and_utc()
                 .timestamp_millis()))
         }

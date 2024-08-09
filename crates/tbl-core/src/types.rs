@@ -38,4 +38,8 @@ pub enum TblError {
     /// General Error
     #[error("Input error: {0}")]
     Error(String),
+
+    /// Error wrapper for AcquireError
+    #[error(transparent)]
+    TokioAcquireError(#[from] tokio::sync::AcquireError),
 }

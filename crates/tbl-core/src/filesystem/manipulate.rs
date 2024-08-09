@@ -10,7 +10,9 @@ pub fn get_common_prefix(paths: &[PathBuf]) -> Result<PathBuf, TblError> {
     let mut components_iter = paths.iter().map(|p| p.components());
     let mut common_components: Vec<Component<'_>> = components_iter
         .next()
-        .expect("There should be at least one path")
+        .ok_or(TblError::Error(
+            "cannot parse common path components".to_string(),
+        ))?
         .collect();
 
     for components in components_iter {
