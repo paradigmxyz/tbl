@@ -38,7 +38,10 @@ fn print_input_summary(
     _args: &DataArgs,
 ) {
     print_header("Inputs");
-    print_bullet("n_input_bytes", tbl_core::formats::format_bytes(n_input_bytes));
+    print_bullet(
+        "n_input_bytes",
+        tbl_core::formats::format_bytes(n_input_bytes),
+    );
     print_bullet(
         "n_input_files",
         tbl_core::formats::format_with_commas(n_input_files as u64),

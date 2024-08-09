@@ -25,7 +25,12 @@ pub(crate) fn output_lazyframe(
 }
 
 fn print_lazyframe(lf: LazyFrame, args: &DataArgs) -> Result<(), TblCliError> {
-    let mut df = lf.collect()?;
+    let df = lf.collect()?;
+
+    let mut df = match args.hex {
+        true => binary_to_hex(&mut df.clone())?,
+        false => df,
+    };
 
     if !args.no_summary {
         println!();
@@ -101,8 +106,18 @@ fn binary_to_hex(df: &mut DataFrame) -> Result<DataFrame, PolarsError> {
         .collect();
 
     for col_name in binary_columns {
-        let hex_col = df.column(&col_name)?.binary()?.hex_encode().into_series();
-        df = df.with_column(hex_col)?.clone();
+        let hex_col_with_prefix = df
+            .clone()
+            .lazy()
+            .select(&[
+                concat_str([lit("0x"), col(&col_name).binary().hex_encode()], "", true)
+                    .alias(&col_name),
+            ])
+            .collect()?
+            .column(&col_name)?
+            .clone();
+
+        df = df.with_column(hex_col_with_prefix)?.clone();
     }
 
     Ok(df)

@@ -318,6 +318,10 @@ pub(crate) struct DataArgs {
     #[clap(long, help_heading = "Output Options")]
     pub(crate) jsonl: bool,
 
+    /// encode binary columns as hex for output
+    #[clap(long, help_heading = "Output Options")]
+    pub(crate) hex: bool,
+
     /// modify files in place
     #[clap(long, help_heading = "Output Options")]
     pub(crate) inplace: bool,
