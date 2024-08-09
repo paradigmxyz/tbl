@@ -1,10 +1,10 @@
 
 # tbl ┳━┳
 
-`tbl` is a tool for reading and editing tabular data files like parquet
+`tbl` is a cli tool for reading and editing parquet files
 
 #### Goals of `tbl`:
-- make it effortless to read, edit, and manage parquet datasets
+- make it effortless to manage parquet datasets
 - use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already know `tbl`
 
 #### Example use cases:
@@ -37,7 +37,7 @@
 cargo install tbl-cli
 ```
 
-##### Install from source:
+##### Install from source
 ```bash
 git clone https://github.com/paradigmxyz/tbl
 cd tbl
@@ -66,6 +66,8 @@ blocks__00009000_to_00009999.parquet
 ... 19,660 files not shown
 19,041,325 rows stored in 1.05 GB across 19,708 tabular files
 ```
+
+See full list of `tbl ls` options [below](#tbl-ls).
 
 ### Looking up schemas
 
@@ -101,6 +103,8 @@ These input selection options can be used with each `tbl` subcommand:
 | Select files using a glob | `tbl *.parquet` |
 | Select files from multiple directories | `tbl /path/to/dir1 /path/to/dir2` |
 | Select files recursively | `tbl /path/to/dir --tree` |
+
+See full list of `tbl ls` options [below](#tbl-ls).
 
 ### Performing edits
 
@@ -269,7 +273,7 @@ The most common tools are [`duckdb`](https://duckdb.org/docs/api/cli/overview), 
 ### What is the plan for `tbl`?
 
 There are a few features that we are currently exploring:
-1. **S3 and cloud buckets**: ability to read and write parquet files with the same operations that can be done performed on local files
+1. **S3 and cloud buckets**: ability to read and write cloud bucket parquet files using the same operations that can be performed on local files
 2. **Re-partitioning**: ability to change how a set of parquet files are partitioned, such as changing the partition key or partition size
 3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
-4. **Idempotent Workflows**: would make migrations more robust
+4. **Idempotent Workflows**: ability to interrupt and re-run commands arbitrarily would make migrations more robust
