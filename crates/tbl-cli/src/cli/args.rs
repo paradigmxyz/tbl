@@ -220,7 +220,7 @@ pub(crate) struct DataArgs {
     pub(crate) columns: Option<Vec<String>>,
 
     /// drop column(s)
-    #[clap(long, help_heading = "Transform Options", num_args(1..))]
+    #[clap(short, long, help_heading = "Transform Options", num_args(1..))]
     pub(crate) drop: Option<Vec<String>>,
 
     /// add new columns, syntax NAME:TYPE [alias --with]
@@ -236,6 +236,7 @@ pub(crate) struct DataArgs {
 
     /// rename column(s), syntax OLD_NAME=NEW_NAME
     #[clap(
+        short,
         long,
         help = cstr!("rename column(s), syntax <white><bold>OLD_NAME=NEW_NAME</bold></white>"),
         help_heading = "Transform Options",
@@ -254,6 +255,7 @@ pub(crate) struct DataArgs {
 
     /// filter rows by values, syntax COLUMN=VALUE
     #[clap(
+        short,
         long,
         help = cstr!("filter rows by values, syntax <white><bold>COLUMN=VALUE</bold></white>
     or <white><bold>COLUMN.is_null</bold></white> or <white><bold>COLUMN.is_not_null</bold></white>"),
@@ -264,6 +266,7 @@ pub(crate) struct DataArgs {
 
     /// sort rows, syntax COLUMN[:desc]
     #[clap(
+        short,
         long,
         help = cstr!("sort rows, syntax <white><bold>COLUMN[:desc]</bold></white>"),
         help_heading = "Transform Options",
@@ -289,6 +292,7 @@ pub(crate) struct DataArgs {
     pub(crate) offset: Option<usize>,
 
     /// compute value counts of column(s)
+    /// count valu
     #[clap(long, help_heading = "Transform Options", value_name = "COLUMN")]
     pub(crate) value_counts: Option<String>,
 
