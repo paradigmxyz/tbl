@@ -4,6 +4,7 @@
 `tbl` is a cli tool for reading and editing parquet files
 
 #### Goals of `tbl`:
+- be a swiss army knife for reading/editing parquet, like [`jq`](https://github.com/jqlang/jq) is for JSON
 - make it effortless to manage parquet datasets
 - use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already know `tbl`
 
