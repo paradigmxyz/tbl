@@ -4,8 +4,8 @@
 `tbl` is a cli tool for reading and editing parquet files
 
 #### Goals of `tbl`:
-- be a swiss army knife for reading/editing parquet, like [`jq`](https://github.com/jqlang/jq) is for JSON
-- make it effortless to manage parquet datasets
+- be a swiss army knife for reading/editing parquet (like [`jq`](https://github.com/jqlang/jq) is for JSON)
+- make it effortless to manage large multi-schema parquet datasets
 - use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already know `tbl`
 
 #### Example use cases:
@@ -91,21 +91,21 @@ base_fee_per_gas  │     u64  │   41.85 MB  │   49.58 MB  │   4.11%
         chain_id  │     u64  │    3.74 MB  │    3.70 MB  │   0.37%
 ```
 
+See full list of `tbl schema` options [below](#tbl-schema).
+
 ### Selecting input files
 
 `tbl` can operate on one file, or many files across multiple directories.
 
 These input selection options can be used with each `tbl` subcommand:
 
-|  | option |
+| input selection | command |
 | --- | --- |
-| Select all tabular files in current directory | (default behavior) |
+| Select all tabular files in current directory | `tbl` (default behavior) |
 | Select a single file | `tbl /path/to/file.parquet` |
 | Select files using a glob | `tbl *.parquet` |
 | Select files from multiple directories | `tbl /path/to/dir1 /path/to/dir2` |
 | Select files recursively | `tbl /path/to/dir --tree` |
-
-See full list of `tbl ls` options [below](#tbl-ls).
 
 ### Performing edits
 
@@ -121,17 +121,21 @@ See full list of `tbl ls` options [below](#tbl-ls).
 | Sort rows | `tbl --sort col1 col2:desc` |
 | Select columns | `tbl --select col1 col2 col3` |
 
+See full list of transformation operations [below](#tbl).
+
 ### Selecting output mode
 
 `tbl` can output its results in many different modes:
 
-| mode | description | `tbl` option |
+| output mode | description | command |
 | --- | --- | --- |
-| Single File | output all results to single file | `--output-file /path/to/file.parquet` |
-| Inplace | modify each file inplace | `--inplace` |
-| New Directory | create equivalent files in a new directory | `--output-dir /path/to/dir` |
-| Interactive | load dataframe in interactive python session | `--df` |
-| Stdout | output data to stdout | (default behavior) |
+| Single File | output all results to single file | `tbl --output-file /path/to/file.parquet` |
+| Inplace | modify each file inplace | `tbl --inplace` |
+| New Directory | create equivalent files in a new directory | `tbl --output-dir /path/to/dir` |
+| Interactive | load dataframe in interactive python session | `tbl --df` |
+| Stdout | output data to stdout | `tbl` (default behavior) |
+
+See full list of output options [below](#tbl).
 
 ## API Reference
 
@@ -142,10 +146,10 @@ See full list of `tbl ls` options [below](#tbl-ls).
 tbl is a tool for reading and editing tabular data files
 
 Usage: tbl has two modes
-1. Summary mode: tbl [ls | schema | schemas] [SUMMARY_OPTIONS]
+1. Summary mode: tbl [ls | schema] [SUMMARY_OPTIONS]
 2. Data mode:    tbl [DATA_OPTIONS]
 
-Get help with SUMMARY_OPTIONS using tbl [ls | schema | schemas] -h
+Get help with SUMMARY_OPTIONS using tbl [ls | schema] -h
 
 Data mode is the default mode. DATA_OPTIONS are documented below
 
@@ -154,51 +158,50 @@ Optional Subcommands:
   schema  Display table representation of each schema in the selected files
 
 General Options:
-  -h, --help                        display help message
-  -V, --version                     display version
+  -h, --help                       display help message
+  -V, --version                    display version
 
 Input Options:
-  [PATHS]...                        input path(s) to use
-  -t, --tree                        recursively use all files in tree as inputs
+  [PATHS]...                       input path(s) to use
+  -t, --tree                       recursively use all files in tree as inputs
 
 Transform Options:
-      --select <SELECT>...          select only these columns [alias --columns]
-      --drop <DROP>...              drop column(s)
-      --with-columns <NEW_COLS>...  insert columns, syntax NAME:TYPE [alias --with]
-      --rename <RENAME>...          rename column(s), syntax OLD_NAME=NEW_NAME
-      --cast <CAST>...              change column type(s), syntax COLUMN=TYPE
-      --filter <FILTER>...          filter rows by values, syntax COLUMN=VALUE
-      --sort <SORT>...              sort rows, syntax COLUMN[:desc]
-      --head <HEAD>                 keep only the first n rows [alias --limit]
-      --tail <TAIL>                 keep only the last n rows
-      --offset <OFFSET>             skip the first n rows of table
-      --value-counts <COLUMN>       compute value counts of column(s)
+  -c, --columns <COLUMNS>...       select only these columns [alias --select]
+      --drop <DROP>...             drop column(s)
+      --with-columns <NEW_COL>...  insert columns, syntax NAME:TYPE [alias --with]
+      --rename <RENAME>...         rename column(s), syntax OLD_NAME=NEW_NAME
+      --cast <CAST>...             change column type(s), syntax COLUMN=TYPE
+      --filter <FILTER>...         filter rows by values, syntax COLUMN=VALUE
+      --sort <SORT>...             sort rows, syntax COLUMN[:desc]
+      --head <HEAD>                keep only the first n rows [alias --limit]
+      --tail <TAIL>                keep only the last n rows
+      --offset <OFFSET>            skip the first n rows of table
+      --value-counts <COLUMN>      compute value counts of column(s)
 
 Output Options:
-      --no-summary                  skip printing a summary
-      --csv                         output data as csv
-      --json                        output data as json
-      --inplace                     modify files in place
-      --output-file <FILE_PATH>     write all data to a single new file
-      --output-dir <DIR_PATH>       rewrite all files into this output directory
-      --output-prefix <PREFIX>      prefix to add to output filenames
-      --output-postfix <POSTFIX>    postfix to add to output filenames
-      --partition <COLUMN>          partition output over this column
-      --partition-by-value <SIZE>   partition mode, by range of values per partition
-      --partition-by-bytes <BYTES>  partition mode, by max bytes per partition
-      --partition-by-rows <ROWS>    partition mode, by max rows per partition
-      --df                          load as DataFrame in interactive python session
-      --lf                          load as LazyFrame in interactive python session
-      --executable <EXECUTABLE>     python executable to use with --df or --lf
-      --confirm                     confirm that files should be edited
-      --dry                         dry run without editing files
+      --no-summary                 skip printing a summary
+  -n, --n <N>                      number of rows to print in stdout, all for all
+      --csv                        output data as csv
+      --json                       output data as json
+      --jsonl                      output data as json lines
+      --hex                        encode binary columns as hex for output
+      --inplace                    modify files in place
+      --output-file <FILE_PATH>    write all data to a single new file
+      --output-dir <DIR_PATH>      rewrite all files into this output directory
+      --output-prefix <PRE-FIX>    prefix to add to output filenames
+      --output-postfix <POST-FIX>  postfix to add to output filenames
+      --df                         load as DataFrame in interactive python session
+      --lf                         load as LazyFrame in interactive python session
+      --executable <EXECUTABLE>    python executable to use with --df or --lf
+      --confirm                    confirm that files should be edited
+      --dry                        dry run without editing files
 
 Output Modes:
-1. output results into single file  --output-file /path/to/file.parquet
-2. modify each file inplace         --inplace
-3. copy files into a new dir        --output-dir /path/to/dir
-4. load interactive python session  --df | --lf
-5. output data to stdout            (default behavior)
+1. output results in single file   --output-file /path/to/file.parquet
+2. modify each file inplace        --inplace
+3. copy files into a new dir       --output-dir /path/to/dir
+4. load as interactive python      --df | --lf
+5. output data to stdout           (default behavior)
 ```
 
 #### `tbl ls`
