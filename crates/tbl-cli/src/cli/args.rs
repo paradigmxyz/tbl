@@ -26,10 +26,10 @@ pub(crate) async fn run_cli() -> Result<(), TblCliError> {
     author,
     about = cstr!("<white><bold>tbl</bold></white> is a tool for reading and editing tabular data files"),
     override_usage = cstr!("<white><bold>tbl</bold></white> has two modes
-1. Summary mode: <white><bold>tbl [ls | schema | schemas] [SUMMARY_OPTIONS]</bold></white>
+1. Summary mode: <white><bold>tbl [ls | schema] [SUMMARY_OPTIONS]</bold></white>
 2. Data mode:    <white><bold>tbl [DATA_OPTIONS]</bold></white>
 
-Get help with <white><bold>SUMMARY_OPTIONS</bold></white> using <white><bold>tbl [ls | schema | schemas] -h</bold></white>
+Get help with <white><bold>SUMMARY_OPTIONS</bold></white> using <white><bold>tbl [ls | schema] -h</bold></white>
 
 Data mode is the default mode. <white><bold>DATA_OPTIONS</bold></white> are documented below
 "),

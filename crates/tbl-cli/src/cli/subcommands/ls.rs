@@ -25,7 +25,7 @@ fn print_file_names(
     absolute: bool,
 ) -> Result<(), TblCliError> {
     // clear common prefix
-    let display_paths = if absolute {
+    let display_paths = if absolute || (paths.len() == 1) {
         paths.to_vec()
     } else {
         let common_prefix = tbl_core::filesystem::get_common_prefix(paths)?;
