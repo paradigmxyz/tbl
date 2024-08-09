@@ -24,6 +24,7 @@ inquire = "0.7.5"
 anstyle = "1.0.7"
 color-print = "0.3.6"
 chrono = "0.4.38"
+hex = "0.4.3"
 
 [build-dependencies]
 built = "0.7"

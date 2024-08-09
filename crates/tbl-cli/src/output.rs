@@ -43,7 +43,11 @@ fn print_lazyframe(lf: LazyFrame, args: &DataArgs) -> Result<(), TblCliError> {
         Some(n) => n.parse::<usize>()?,
         None => 20,
     };
-    let n_missing = df.height() - n_show;
+    let n_missing = if df.height() >= n_show {
+        df.height() - n_show
+    } else {
+        0
+    };
 
     if args.csv {
         let df = binary_to_hex(&mut df)?;

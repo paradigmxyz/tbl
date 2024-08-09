@@ -3048,6 +3048,7 @@ dependencies = [
  "chrono",
  "clap",
  "color-print",
+ "hex",
  "inquire",
  "polars 0.41.3",
  "tbl-core",

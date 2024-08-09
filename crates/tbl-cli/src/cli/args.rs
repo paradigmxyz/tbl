@@ -210,13 +210,14 @@ pub(crate) struct DataArgs {
     //
     /// select only these columns [alias --columns]
     #[clap(
+        short,
         long,
-        help = cstr!("select only these columns [alias <white><bold>--columns</bold></white>]"),
+        help = cstr!("select only these columns [alias <white><bold>--select</bold></white>]"),
         help_heading = "Transform Options",
-        aliases = ["columns"],
+        aliases = ["select"],
         num_args(1..)
     )]
-    pub(crate) select: Option<Vec<String>>,
+    pub(crate) columns: Option<Vec<String>>,
 
     /// drop column(s)
     #[clap(long, help_heading = "Transform Options", num_args(1..))]

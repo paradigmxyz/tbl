@@ -10,7 +10,7 @@ pub(crate) fn apply_transformations(
     let lf = apply_filter(lf, args.filter.as_deref())?;
     let lf = apply_drop(lf, args.drop.as_deref())?;
     let lf = apply_cast(lf, args.cast.as_deref())?;
-    let lf = apply_select(lf, args.select.as_deref())?;
+    let lf = apply_select(lf, args.columns.as_deref())?;
     let lf = apply_head(lf, args.head)?;
     let lf = apply_tail(lf, args.tail)?;
     let lf = apply_offset(lf, args.offset)?;
@@ -135,6 +135,12 @@ pub(crate) fn apply_filter(
     lf: LazyFrame,
     filters: Option<&[String]>,
 ) -> Result<LazyFrame, TblCliError> {
+    // First, get the schema of the LazyFrame
+    let schema = lf
+        .clone()
+        .schema()
+        .map_err(|e| TblCliError::Error(e.to_string()))?;
+
     match filters {
         None => Ok(lf),
         Some(filters) => {
@@ -145,7 +151,51 @@ pub(crate) fn apply_filter(
                     return Err(TblCliError::Error("Invalid filter format".to_string()));
                 }
                 let (column, value) = (parts[0], parts[1]);
-                new_lf = new_lf.filter(col(column).eq(lit(value)));
+
+                // Get the data type of the column
+                let column_type = schema
+                    .get(column)
+                    .ok_or_else(|| TblCliError::Error(format!("Column '{}' not found", column)))?;
+
+                new_lf = match column_type {
+                    DataType::Binary => {
+                        // For Binary type, convert hex to binary
+                        if let Some(hex_value) = value.strip_prefix("0x") {
+                            let binary_value = hex::decode(hex_value).map_err(|e| {
+                                TblCliError::Error(format!("Invalid hex value: {}", e))
+                            })?;
+                            new_lf.filter(col(column).eq(lit(binary_value)))
+                        } else {
+                            return Err(TblCliError::Error(
+                                "Binary value must start with 0x".to_string(),
+                            ));
+                        }
+                    }
+                    DataType::String => {
+                        // For String type, use the value as-is
+                        new_lf.filter(col(column).eq(lit(value)))
+                    }
+                    DataType::UInt64 | DataType::Int64 => {
+                        // For integer types, parse the value
+                        let int_value = if let Some(hex_value) = value.strip_prefix("0x") {
+                            i64::from_str_radix(hex_value, 16).map_err(|e| {
+                                TblCliError::Error(format!("Invalid hex integer: {}", e))
+                            })?
+                        } else {
+                            value.parse::<i64>().map_err(|e| {
+                                TblCliError::Error(format!("Invalid integer: {}", e))
+                            })?
+                        };
+                        new_lf.filter(col(column).eq(lit(int_value)))
+                    }
+                    // Add more type handling as needed
+                    _ => {
+                        return Err(TblCliError::Error(format!(
+                            "Unsupported column type for '{}': {:?}",
+                            column, column_type
+                        )))
+                    }
+                };
             }
             Ok(new_lf)
         }
