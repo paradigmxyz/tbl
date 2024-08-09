@@ -11,9 +11,9 @@ pub(crate) fn apply_transformations(
     let lf = apply_drop(lf, args.drop.as_deref())?;
     let lf = apply_cast(lf, args.cast.as_deref())?;
     let lf = apply_select(lf, args.columns.as_deref())?;
+    let lf = apply_offset(lf, args.offset)?;
     let lf = apply_head(lf, args.head)?;
     let lf = apply_tail(lf, args.tail)?;
-    let lf = apply_offset(lf, args.offset)?;
     let lf = apply_value_counts(lf, args.value_counts.as_deref())?;
     let lf = apply_sort(lf, args.sort.as_deref())?;
     let lf = apply_rename(lf, args.rename.as_deref())?;
