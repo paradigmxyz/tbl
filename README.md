@@ -262,4 +262,4 @@ There are a few features that we are currently exploring:
 1. **S3 and cloud buckets**: ability to read and write parquet files with the same operations that can be done performed on local files
 2. **Re-partitioning**: ability to change how a set of parquet files are partitioned, such as changing the partition key or partition size
 3. **Direct python syntax**: ability to directly use python polars syntax to perform complex operations like `group_by()`, `join()`, and more
-4. **Performance optimization**: there's always room to make things faster
+4. **Idempotent Workflows**: would make migrations more robust
