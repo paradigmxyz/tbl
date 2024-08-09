@@ -209,6 +209,7 @@ fn print_schemas(
 
         if i < n_to_show - 1 {
             println!();
+            println!();
             if example_paths.is_some() {
                 println!();
             }
