@@ -4,14 +4,18 @@
 `tbl` is a cli tool for reading and editing parquet files
 
 #### Goals of `tbl`:
-- be a swiss army knife for reading/editing parquet (like [`jq`](https://github.com/jqlang/jq) is for JSON)
-- make it effortless to manage large multi-schema parquet datasets
-- use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already know `tbl`
+- be a swiss army knife for reading/editing parquet (kind of like [`jq`](https://github.com/jqlang/jq) is for JSON)
+- make it effortless to manage multi-file multi-schema parquet datasets
+- use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already mostly know `tbl`
 
 #### Example use cases:
 - quickly look up schemas, row counts, and per-column storage usage
 - migrate from one schema to another, like add/remove/rename a column
 - perform these operations on multiple files in parallel
+
+
+To discuss `tbl`, check out [the Paradigm Data Tools telegram group](https://t.me/paradigm_data)
+
 
 ## Contents
 1. [Installation](#installation)

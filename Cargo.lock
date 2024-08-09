@@ -3041,7 +3041,7 @@ checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
 
 [[package]]
 name = "tbl-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anstyle",
  "built",
@@ -3061,7 +3061,7 @@ dependencies = [
 
 [[package]]
 name = "tbl-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "arrow",
  "colored",

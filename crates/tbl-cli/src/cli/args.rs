@@ -297,7 +297,6 @@ pub(crate) struct DataArgs {
     pub(crate) offset: Option<usize>,
 
     /// compute value counts of column(s)
-    /// count valu
     #[clap(long, help_heading = "Transform Options", value_name = "COLUMN")]
     pub(crate) value_counts: Option<String>,
 
