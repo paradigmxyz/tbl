@@ -75,6 +75,9 @@ fn gather_inputs_and_outputs(
             }
         }
         OutputMode::SaveToDirectory => {
+            if let Some(output_dir) = args.output_dir.clone() {
+                let _ = std::fs::create_dir(output_dir);
+            };
             let output_spec = OutputPathSpec {
                 inputs: args.paths.clone(),
                 output_dir: args.output_dir.clone(),

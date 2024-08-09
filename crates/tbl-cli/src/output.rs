@@ -136,16 +136,32 @@ fn save_lf_to_disk(
         Some(output_path) => output_path,
         None => return Err(TblCliError::Error("no output path specified".to_string())),
     };
+
+    // Create a temporary path by appending "_tmp" to the original path
+    let tmp_path = output_path.with_file_name(format!(
+        "{}_tmp",
+        output_path
+            .file_name()
+            .ok_or_else(|| TblCliError::Error("File name is missing".to_string()))?
+            .to_str()
+            .ok_or_else(|| TblCliError::Error("File name is not valid UTF-8".to_string()))?
+    ));
+
+    // Write to the temporary file
     if output_path.ends_with(".csv") | args.csv {
         let options = CsvWriterOptions::default();
-        lf.sink_csv(output_path, options)?;
+        lf.sink_csv(&tmp_path, options)?;
     } else if output_path.ends_with(".json") | args.json {
         let options = JsonWriterOptions::default();
-        lf.sink_json(output_path, options)?;
+        lf.sink_json(&tmp_path, options)?;
     } else {
         let options = ParquetWriteOptions::default();
-        lf.sink_parquet(output_path, options)?;
+        lf.sink_parquet(&tmp_path, options)?;
     };
+
+    // Move the temporary file to the final output path
+    std::fs::rename(&tmp_path, &output_path).map_err(|e| TblCliError::Error(e.to_string()))?;
+
     Ok(())
 }
 
