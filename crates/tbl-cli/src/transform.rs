@@ -135,7 +135,6 @@ pub(crate) fn apply_filter(
     lf: LazyFrame,
     filters: Option<&[String]>,
 ) -> Result<LazyFrame, TblCliError> {
-    // First, get the schema of the LazyFrame
     let schema = lf
         .clone()
         .schema()
@@ -146,60 +145,120 @@ pub(crate) fn apply_filter(
         Some(filters) => {
             let mut new_lf = lf;
             for filter in filters {
-                let parts: Vec<&str> = filter.split('=').collect();
-                if parts.len() != 2 {
-                    return Err(TblCliError::Error("Invalid filter format".to_string()));
-                }
-                let (column, value) = (parts[0], parts[1]);
-
-                // Get the data type of the column
-                let column_type = schema
-                    .get(column)
-                    .ok_or_else(|| TblCliError::Error(format!("Column '{}' not found", column)))?;
-
-                new_lf = match column_type {
-                    DataType::Binary => {
-                        // For Binary type, convert hex to binary
-                        if let Some(hex_value) = value.strip_prefix("0x") {
-                            let binary_value = hex::decode(hex_value).map_err(|e| {
-                                TblCliError::Error(format!("Invalid hex value: {}", e))
-                            })?;
-                            new_lf.filter(col(column).eq(lit(binary_value)))
-                        } else {
-                            return Err(TblCliError::Error(
-                                "Binary value must start with 0x".to_string(),
-                            ));
-                        }
-                    }
-                    DataType::String => {
-                        // For String type, use the value as-is
-                        new_lf.filter(col(column).eq(lit(value)))
-                    }
-                    DataType::UInt64 | DataType::Int64 => {
-                        // For integer types, parse the value
-                        let int_value = if let Some(hex_value) = value.strip_prefix("0x") {
-                            i64::from_str_radix(hex_value, 16).map_err(|e| {
-                                TblCliError::Error(format!("Invalid hex integer: {}", e))
-                            })?
-                        } else {
-                            value.parse::<i64>().map_err(|e| {
-                                TblCliError::Error(format!("Invalid integer: {}", e))
-                            })?
-                        };
-                        new_lf.filter(col(column).eq(lit(int_value)))
-                    }
-                    // Add more type handling as needed
-                    _ => {
-                        return Err(TblCliError::Error(format!(
-                            "Unsupported column type for '{}': {:?}",
-                            column, column_type
-                        )))
-                    }
-                };
+                new_lf = apply_single_filter(new_lf, filter, &schema)?;
             }
             Ok(new_lf)
         }
     }
+}
+
+fn apply_single_filter(
+    lf: LazyFrame,
+    filter: &str,
+    schema: &Schema,
+) -> Result<LazyFrame, TblCliError> {
+    if filter.contains('=') {
+        apply_equality_filter(lf, filter, schema, true)
+    } else if filter.contains("!=") {
+        apply_equality_filter(lf, filter, schema, false)
+    } else if filter.ends_with(".is_null") {
+        apply_null_filter(lf, filter, schema, true)
+    } else if filter.ends_with(".is_not_null") {
+        apply_null_filter(lf, filter, schema, false)
+    } else {
+        Err(TblCliError::Error("Invalid filter format".to_string()))
+    }
+}
+
+fn apply_equality_filter(
+    lf: LazyFrame,
+    filter: &str,
+    schema: &Schema,
+    is_equality: bool,
+) -> Result<LazyFrame, TblCliError> {
+    let parts: Vec<&str> = if is_equality {
+        filter.split('=').collect()
+    } else {
+        filter.split("!=").collect()
+    };
+
+    if parts.len() != 2 {
+        return Err(TblCliError::Error("Invalid filter format".to_string()));
+    }
+
+    let (column, value) = (parts[0], parts[1]);
+    let column_type = schema
+        .get(column)
+        .ok_or_else(|| TblCliError::Error(format!("Column '{}' not found", column)))?;
+
+    let filter_expr = match column_type {
+        DataType::Binary => {
+            if let Some(hex_value) = value.strip_prefix("0x") {
+                let binary_value = hex::decode(hex_value)
+                    .map_err(|e| TblCliError::Error(format!("Invalid hex value: {}", e)))?;
+                if is_equality {
+                    col(column).eq(lit(binary_value))
+                } else {
+                    col(column).neq(lit(binary_value))
+                }
+            } else {
+                return Err(TblCliError::Error(
+                    "Binary value must start with 0x".to_string(),
+                ));
+            }
+        }
+        DataType::String => {
+            if is_equality {
+                col(column).eq(lit(value))
+            } else {
+                col(column).neq(lit(value))
+            }
+        }
+        DataType::UInt64 | DataType::Int64 => {
+            let int_value = if let Some(hex_value) = value.strip_prefix("0x") {
+                i64::from_str_radix(hex_value, 16)
+                    .map_err(|e| TblCliError::Error(format!("Invalid hex integer: {}", e)))?
+            } else {
+                value
+                    .parse::<i64>()
+                    .map_err(|e| TblCliError::Error(format!("Invalid integer: {}", e)))?
+            };
+            if is_equality {
+                col(column).eq(lit(int_value))
+            } else {
+                col(column).neq(lit(int_value))
+            }
+        }
+        _ => {
+            return Err(TblCliError::Error(format!(
+                "Unsupported column type for '{}': {:?}",
+                column, column_type
+            )))
+        }
+    };
+
+    Ok(lf.filter(filter_expr))
+}
+
+fn apply_null_filter(
+    lf: LazyFrame,
+    filter: &str,
+    schema: &Schema,
+    is_null: bool,
+) -> Result<LazyFrame, TblCliError> {
+    let column = filter.trim_end_matches(if is_null { ".is_null" } else { ".is_not_null" });
+
+    if schema.get(column).is_none() {
+        return Err(TblCliError::Error(format!("Column '{}' not found", column)));
+    }
+
+    let filter_expr = if is_null {
+        col(column).is_null()
+    } else {
+        col(column).is_not_null()
+    };
+
+    Ok(lf.filter(filter_expr))
 }
 
 pub(crate) fn apply_rename(

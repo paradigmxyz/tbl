@@ -255,7 +255,8 @@ pub(crate) struct DataArgs {
     /// filter rows by values, syntax COLUMN=VALUE
     #[clap(
         long,
-        help = cstr!("filter rows by values, syntax <white><bold>COLUMN=VALUE</bold></white>"),
+        help = cstr!("filter rows by values, syntax <white><bold>COLUMN=VALUE</bold></white>
+    or <white><bold>COLUMN.is_null</bold></white> or <white><bold>COLUMN.is_not_null</bold></white>"),
         help_heading = "Transform Options",
         num_args(1..)
     )]
