@@ -14,7 +14,7 @@
 - perform these operations on multiple files in parallel
 
 
-To discuss `tbl`, check out [the Paradigm Data Tools telegram group](https://t.me/paradigm_data)
+To discuss `tbl`, check out the [Paradigm Data Tools](https://t.me/paradigm_data) telegram group.
 
 
 ## Contents
