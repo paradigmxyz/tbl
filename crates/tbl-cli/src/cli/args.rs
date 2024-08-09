@@ -8,7 +8,12 @@ pub(crate) async fn run_cli() -> Result<(), TblCliError> {
     let args = Cli::parse();
 
     if args.version {
-        println!("{}", env!("GIT_DESCRIPTION"));
+        let version = env!("GIT_DESCRIPTION");
+        if version.is_empty() {
+            println!(env!("CARGO_PKG_VERSION"));
+        } else {
+            println!("{}", version);
+        }
         std::process::exit(0);
     }
 
