@@ -220,6 +220,7 @@ pub(crate) struct DataArgs {
         help = cstr!("select only these columns [alias <white><bold>--select</bold></white>]"),
         help_heading = "Transform Options",
         aliases = ["select"],
+        value_name="COLUMN",
         num_args(1..)
     )]
     pub(crate) columns: Option<Vec<String>>,
@@ -257,6 +258,25 @@ pub(crate) struct DataArgs {
         num_args(1..)
     )]
     pub(crate) cast: Option<Vec<String>>,
+
+    /// set column values
+    #[clap(
+        long,
+        help = cstr!("set column value, syntax <white><bold>COLUMN=VALUE</bold></white>"),
+        help_heading = "Transform Options",
+        value_name="COLUMN",
+        num_args(1..)
+    )]
+    pub(crate) set: Option<Vec<String>>,
+
+    /// set column values to null
+    #[clap(
+        long,
+        help_heading = "Transform Options",
+        value_name="COLUMN",
+        num_args(1..)
+    )]
+    pub(crate) nullify: Option<Vec<String>>,
 
     /// filter rows by values, syntax COLUMN=VALUE
     #[clap(

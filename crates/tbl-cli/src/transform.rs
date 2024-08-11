@@ -10,6 +10,8 @@ pub(crate) fn apply_transformations(
     let lf = apply_filter(lf, args.filter.as_deref())?;
     let lf = apply_drop(lf, args.drop.as_deref())?;
     let lf = apply_cast(lf, args.cast.as_deref())?;
+    let lf = apply_set(lf, args.set.as_deref())?;
+    let lf = apply_nullify(lf, args.nullify.as_deref())?;
     let lf = apply_select(lf, args.columns.as_deref())?;
     let lf = apply_offset(lf, args.offset)?;
     let lf = apply_head(lf, args.head)?;
@@ -309,6 +311,134 @@ pub(crate) fn apply_cast(lf: LazyFrame, cast: Option<&[String]>) -> Result<LazyF
                 let (column, dtype_str) = (parts[0], parts[1]);
                 let dtype = parse_dtype(dtype_str)?;
                 new_lf = new_lf.with_column(col(column).cast(dtype));
+            }
+            Ok(new_lf)
+        }
+    }
+}
+
+pub(crate) fn apply_set(lf: LazyFrame, set: Option<&[String]>) -> Result<LazyFrame, TblCliError> {
+    match set {
+        None => Ok(lf),
+        Some(set) => {
+            let mut new_lf = lf;
+            let schema = new_lf
+                .schema()
+                .map_err(|e| TblCliError::Error(e.to_string()))?;
+
+            for s in set {
+                println!("s: {:?}", s);
+                let parts: Vec<&str> = s.split('=').collect();
+                println!("parts: {:?}", parts);
+                if parts.len() != 2 {
+                    return Err(TblCliError::Error("Invalid set format".to_string()));
+                }
+                let (column, value) = (parts[0], parts[1]);
+
+                let column_type = schema
+                    .get(column)
+                    .ok_or_else(|| TblCliError::Error(format!("Column '{}' not found", column)))?;
+                println!("column_type: {:?}", column_type);
+                println!("column: {:?}", column);
+
+                let set_expr = create_set_expr(column, value, column_type)?;
+                println!("set_expr: {:?}", set_expr);
+                new_lf = new_lf.with_column(set_expr.cast(column_type.clone()));
+                println!("done");
+            }
+            Ok(new_lf)
+        }
+    }
+}
+
+fn create_set_expr(column: &str, value: &str, dtype: &DataType) -> Result<Expr, TblCliError> {
+    let lit_value = match dtype {
+        DataType::Int8 => lit(i8::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid i8 value: {}", value)))?),
+        DataType::Int16 => lit(i16::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid i16 value: {}", value)))?),
+        DataType::Int32 => lit(i32::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid i32 value: {}", value)))?),
+        DataType::Int64 => lit(i64::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid i64 value: {}", value)))?),
+        DataType::UInt8 => lit(u8::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid u8 value: {}", value)))?),
+        DataType::UInt16 => lit(u16::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid u16 value: {}", value)))?),
+        DataType::UInt32 => lit(u32::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid u32 value: {}", value)))?),
+        DataType::UInt64 => lit(u64::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid u64 value: {}", value)))?),
+        DataType::Float32 => lit(f32::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid f32 value: {}", value)))?),
+        DataType::Float64 => lit(f64::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid f64 value: {}", value)))?),
+        DataType::Boolean => lit(bool::from_str(value)
+            .map_err(|_| TblCliError::Error(format!("Invalid boolean value: {}", value)))?),
+        DataType::String => lit(value.to_string()),
+        DataType::Date => {
+            let naive_date =
+                chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d").map_err(|_| {
+                    TblCliError::Error("Invalid date format. Use YYYY-MM-DD".to_string())
+                })?;
+            lit(naive_date
+                .and_hms_opt(0, 0, 0)
+                .ok_or_else(|| TblCliError::Error("Failed to create NaiveDateTime".to_string()))?
+                .and_utc()
+                .timestamp_millis())
+        }
+        DataType::Datetime(_, _) => {
+            let naive_datetime = chrono::NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M:%S")
+                .map_err(|_| {
+                    TblCliError::Error(
+                        "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS".to_string(),
+                    )
+                })?;
+            lit(naive_datetime.and_utc().timestamp_millis())
+        }
+        DataType::Binary => {
+            if let Some(hex_value) = value.strip_prefix("0x") {
+                let binary_value = hex::decode(hex_value)
+                    .map_err(|e| TblCliError::Error(format!("Invalid hex value: {}", e)))?;
+                lit(binary_value)
+            } else {
+                return Err(TblCliError::Error(
+                    "Binary value must start with 0x".to_string(),
+                ));
+            }
+        }
+        _ => {
+            return Err(TblCliError::Error(format!(
+                "Unsupported column type for '{}': {:?}",
+                column, dtype
+            )))
+        }
+    };
+
+    Ok(lit_value.alias(column))
+}
+
+pub(crate) fn apply_nullify(
+    lf: LazyFrame,
+    raw_columns: Option<&[String]>,
+) -> Result<LazyFrame, TblCliError> {
+    match raw_columns {
+        None => Ok(lf),
+        Some(columns) => {
+            let mut new_lf = lf;
+            let schema = new_lf
+                .schema()
+                .map_err(|e| TblCliError::Error(e.to_string()))?;
+
+            for column in columns.iter() {
+                let column_type = schema
+                    .get(column)
+                    .ok_or_else(|| TblCliError::Error(format!("Column '{}' not found", column)))?;
+                new_lf = new_lf.with_column(
+                    lit(LiteralValue::Null)
+                        .cast(column_type.clone())
+                        .alias(column),
+                );
             }
             Ok(new_lf)
         }

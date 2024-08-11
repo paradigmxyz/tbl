@@ -170,11 +170,13 @@ Input Options:
   -t, --tree                       recursively use all files in tree as inputs
 
 Transform Options:
-  -c, --columns <COLUMNS>...       select only these columns [alias --select]
+  -c, --columns <COLUMN>...        select only these columns [alias --select]
       --drop <DROP>...             drop column(s)
       --with-columns <NEW_COL>...  insert columns, syntax NAME:TYPE [alias --with]
       --rename <RENAME>...         rename column(s), syntax OLD_NAME=NEW_NAME
       --cast <CAST>...             change column type(s), syntax COLUMN=TYPE
+      --set <COLUMN>...            set column values, syntax COLUMN=VALUE
+      --nullify <COLUMN>...        set column values to null
       --filter <FILTER>...         filter rows by values, syntax COLUMN=VALUE
       --sort <SORT>...             sort rows, syntax COLUMN[:desc]
       --head <HEAD>                keep only the first n rows [alias --limit]
