@@ -121,7 +121,7 @@ These input selection options can be used with each `tbl` subcommand:
 | Cast to a new type | `tbl --cast col1=u64 col2=String` |
 | Add new columns | `tbl --with-columns name:String date:Date=2024-01-01` |
 | Drop columns | `tbl --drop col1 col2 col3` |
-| Filter rows | `tbl --filter col1=val1` |
+| Filter rows | `tbl --filter col1=val1` <br> `tbl --filter col1!=val1` <br> `tbl --filter "col1>val1"` <br> `tbl --filter "col1<val1"`<br> `tbl --filter "col1>=val1"` <br> `tbl --filter "col1<=val1"` |
 | Sort rows | `tbl --sort col1 col2:desc` |
 | Select columns | `tbl --select col1 col2 col3` |
 
