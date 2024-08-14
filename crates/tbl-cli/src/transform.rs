@@ -260,7 +260,7 @@ fn apply_comparison_filter(
                 return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
             }
         }
-        DataType::UInt64 | DataType::Int64 => {
+        DataType::UInt64 | DataType::Int64 | DataType::UInt32 | DataType::Int32 => {
             let int_value = if let Some(hex_value) = value.strip_prefix("0x") {
                 i64::from_str_radix(hex_value, 16)
                     .map_err(|e| TblCliError::Error(format!("Invalid hex integer: {}", e)))?
