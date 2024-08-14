@@ -159,11 +159,25 @@ fn apply_single_filter(
     filter: &str,
     schema: &Schema,
 ) -> Result<LazyFrame, TblCliError> {
-    if filter.contains('=') {
-        apply_equality_filter(lf, filter, schema, true)
-    } else if filter.contains("!=") {
-        apply_equality_filter(lf, filter, schema, false)
-    } else if filter.ends_with(".is_null") {
+    if filter.contains("!=") {
+        apply_comparison_filter(lf, filter, schema, "!=")
+    }
+    else if filter.contains(">=") {
+        apply_comparison_filter(lf, filter, schema, ">=")
+    }
+    else if filter.contains("<=") {
+        apply_comparison_filter(lf, filter, schema, "<=")
+    }
+    else if filter.contains('=') {
+        apply_comparison_filter(lf, filter, schema, "=")
+    } 
+    else if filter.contains(">") {
+        apply_comparison_filter(lf, filter, schema, ">")
+    }
+    else if filter.contains("<") {
+        apply_comparison_filter(lf, filter, schema, "<")
+    }
+    else if filter.ends_with(".is_null") {
         apply_null_filter(lf, filter, schema, true)
     } else if filter.ends_with(".is_not_null") {
         apply_null_filter(lf, filter, schema, false)
@@ -172,16 +186,26 @@ fn apply_single_filter(
     }
 }
 
-fn apply_equality_filter(
+fn apply_comparison_filter(
     lf: LazyFrame,
     filter: &str,
     schema: &Schema,
-    is_equality: bool,
+    operator: &str,
 ) -> Result<LazyFrame, TblCliError> {
-    let parts: Vec<&str> = if is_equality {
+    let parts: Vec<&str> = if operator == "=" {
         filter.split('=').collect()
-    } else {
+    } else if operator == "!=" {
         filter.split("!=").collect()
+    } else if operator == ">" {
+        filter.split('>').collect()
+    } else if operator == "<" {
+        filter.split('<').collect()
+    } else if operator == ">=" {
+        filter.split(">=").collect()
+    } else if operator == "<=" {
+        filter.split("<=").collect()
+    } else {
+        return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
     };
 
     if parts.len() != 2 {
@@ -198,10 +222,20 @@ fn apply_equality_filter(
             if let Some(hex_value) = value.strip_prefix("0x") {
                 let binary_value = hex::decode(hex_value)
                     .map_err(|e| TblCliError::Error(format!("Invalid hex value: {}", e)))?;
-                if is_equality {
+                if operator == "=" {
                     col(column).eq(lit(binary_value))
-                } else {
+                } else if operator == "!=" {
                     col(column).neq(lit(binary_value))
+                } else if operator == ">" {
+                    col(column).gt(lit(binary_value))
+                } else if operator == "<" {
+                    col(column).lt(lit(binary_value))
+                } else if operator == ">=" {
+                    col(column).gt_eq(lit(binary_value))
+                } else if operator == "<=" {
+                    col(column).lt_eq(lit(binary_value))
+                } else {
+                    return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
                 }
             } else {
                 return Err(TblCliError::Error(
@@ -210,13 +244,23 @@ fn apply_equality_filter(
             }
         }
         DataType::String => {
-            if is_equality {
+            if operator == "=" {
                 col(column).eq(lit(value))
-            } else {
+            } else if operator == "!=" {
                 col(column).neq(lit(value))
+            } else if operator == ">" {
+                col(column).gt(lit(value))
+            } else if operator == "<" {
+                col(column).lt(lit(value))
+            } else if operator == ">=" {
+                col(column).gt_eq(lit(value))
+            } else if operator == "<=" {
+                col(column).lt_eq(lit(value))
+            } else {
+                return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
             }
         }
-        DataType::UInt64 | DataType::Int64 => {
+        DataType::UInt64 | DataType::Int64 | DataType::UInt32 | DataType::Int32 => {
             let int_value = if let Some(hex_value) = value.strip_prefix("0x") {
                 i64::from_str_radix(hex_value, 16)
                     .map_err(|e| TblCliError::Error(format!("Invalid hex integer: {}", e)))?
@@ -225,10 +269,20 @@ fn apply_equality_filter(
                     .parse::<i64>()
                     .map_err(|e| TblCliError::Error(format!("Invalid integer: {}", e)))?
             };
-            if is_equality {
+            if operator == "=" {
                 col(column).eq(lit(int_value))
-            } else {
+            } else if operator == "!=" {
                 col(column).neq(lit(int_value))
+            } else if operator == ">" {
+                col(column).gt(lit(int_value))
+            } else if operator == "<" {
+                col(column).lt(lit(int_value))
+            } else if operator == ">=" {
+                col(column).gt_eq(lit(int_value))
+            } else if operator == "<=" {
+                col(column).lt_eq(lit(int_value))
+            } else {
+                return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
             }
         }
         _ => {
