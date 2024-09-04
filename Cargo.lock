@@ -2022,6 +2022,7 @@ dependencies = [
  "atoi_simd",
  "bytes",
  "chrono",
+ "chrono-tz",
  "fast-float",
  "futures",
  "home",
@@ -2078,6 +2079,7 @@ checksum = "543d7d3853f2c52dbfedee9ebf0d58c4ff3b92aadee5309150b2d14df49d6253"
 dependencies = [
  "ahash",
  "chrono",
+ "chrono-tz",
  "fallible-streaming-iterator",
  "hashbrown",
  "indexmap",
@@ -3034,13 +3036,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "target-features"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
-
-[[package]]
-name = "tbl-cli"
+name = "tabl-cli"
 version = "0.1.1"
 dependencies = [
  "anstyle",
@@ -3051,7 +3047,7 @@ dependencies = [
  "hex",
  "inquire",
  "polars 0.41.3",
- "tbl-core",
+ "tabl-core",
  "term_size",
  "thiserror",
  "tokio",
@@ -3060,7 +3056,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tbl-core"
+name = "tabl-core"
 version = "0.1.1"
 dependencies = [
  "arrow",
@@ -3073,6 +3069,12 @@ dependencies = [
  "thiserror",
  "tokio",
 ]
+
+[[package]]
+name = "target-features"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
 
 [[package]]
 name = "tempfile"

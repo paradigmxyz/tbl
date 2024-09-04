@@ -1,12 +1,12 @@
 
-# tbl ┳━┳
+# tabl ┳━┳
 
-`tbl` is a cli tool for reading and editing parquet files
+`tabl` is a cli tool for reading and editing parquet files
 
-#### Goals of `tbl`:
+#### Goals of `tabl`:
 - be a swiss army knife for reading/editing parquet (kind of like [`jq`](https://github.com/jqlang/jq) is for JSON)
 - make it effortless to manage multi-file multi-schema parquet datasets
-- use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already mostly know `tbl`
+- use a cli-native version of [polars](https://github.com/pola-rs/polars) syntax, so if you know python polars you already mostly know `tabl`
 
 #### Example use cases:
 - quickly look up schemas, row counts, and per-column storage usage
@@ -14,7 +14,7 @@
 - perform these operations on multiple files in parallel
 
 
-To discuss `tbl`, check out the [Paradigm Data Tools](https://t.me/paradigm_data) telegram group.
+To discuss `tabl`, check out the [Paradigm Data Tools](https://t.me/paradigm_data) telegram group.
 
 
 ## Contents
@@ -26,36 +26,36 @@ To discuss `tbl`, check out the [Paradigm Data Tools](https://t.me/paradigm_data
     4. [Performing edits](#performing-edits)
     5. [Selecting output mode](#selecting-output-mode)
 4. [API Reference](#api-reference)
-    1. [`tbl`](#tbl)
-    2. [`tbl ls`](#tbl-ls)
-    3. [`tbl schema`](#tbl-schema)
+    1. [`tabl`](#tabl)
+    2. [`tabl ls`](#tabl-ls)
+    3. [`tabl schema`](#tabl-schema)
 6. [FAQ](#faq)
     1. [What is parquet?](#what-is-parquet)
     2. [What other parquet cli tools exist?](#what-other-parquet-cli-tools-exist)
-    3. [Why use `tbl` when `duckdb` has a cli?](#why-use-tbl-when-duckdb-has-a-cli)
-    4. [What is the plan for `tbl`?](#what-is-the-plan-for-tbl)
+    3. [Why use `tabl` when `duckdb` has a cli?](#why-use-tabl-when-duckdb-has-a-cli)
+    4. [What is the plan for `tabl`?](#what-is-the-plan-for-tabl)
 
 ## Installation
 
 ##### Install from crates.io
 ```bash
-cargo install tbl-cli
+cargo install tabl-cli
 ```
 
 ##### Install from source
 ```bash
-git clone https://github.com/paradigmxyz/tbl
-cd tbl
-cargo install --path crates/tbl-cli
+git clone https://github.com/paradigmxyz/tabl
+cd tabl
+cargo install --path crates/tabl-cli
 ```
 
 ## Example Usage
 
 ### Listing files
 
-`tbl` can list files and display their statistics, similar to the `ls` cli command.
+`tabl` can list files and display their statistics, similar to the `ls` cli command.
 
-The command `tbl ls` produces output:
+The command `tabl ls` produces output:
 
 ```
 blocks__00000000_to_00000999.parquet
@@ -72,13 +72,13 @@ blocks__00009000_to_00009999.parquet
 19,041,325 rows stored in 1.05 GB across 19,708 tabular files
 ```
 
-See full list of `tbl ls` options [below](#tbl-ls).
+See full list of `tabl ls` options [below](#tabl-ls).
 
 ### Looking up schemas
 
-`tbl` can display the schemas of parquet files.
+`tabl` can display the schemas of parquet files.
 
-The command `tbl schema` produces output:
+The command `tabl schema` produces output:
 
 ```
 1 unique schema, 19,041,325 rows, 19,708 files, 1.05 GB
@@ -95,65 +95,65 @@ base_fee_per_gas  │     u64  │   41.85 MB  │   49.58 MB  │   4.11%
         chain_id  │     u64  │    3.74 MB  │    3.70 MB  │   0.37%
 ```
 
-See full list of `tbl schema` options [below](#tbl-schema).
+See full list of `tabl schema` options [below](#tabl-schema).
 
 ### Selecting input files
 
-`tbl` can operate on one file, or many files across multiple directories.
+`tabl` can operate on one file, or many files across multiple directories.
 
-These input selection options can be used with each `tbl` subcommand:
+These input selection options can be used with each `tabl` subcommand:
 
 | input selection | command |
 | --- | --- |
-| Select all tabular files in current directory | `tbl` (default behavior) |
-| Select a single file | `tbl /path/to/file.parquet` |
-| Select files using a glob | `tbl *.parquet` |
-| Select files from multiple directories | `tbl /path/to/dir1 /path/to/dir2` |
-| Select files recursively | `tbl /path/to/dir --tree` |
+| Select all tabular files in current directory | `tabl` (default behavior) |
+| Select a single file | `tabl /path/to/file.parquet` |
+| Select files using a glob | `tabl *.parquet` |
+| Select files from multiple directories | `tabl /path/to/dir1 /path/to/dir2` |
+| Select files recursively | `tabl /path/to/dir --tree` |
 
 ### Performing edits
 
-`tbl` can perform many different operations on the selected files:
+`tabl` can perform many different operations on the selected files:
 
 | operation | command |
 | --- | --- |
-| Rename a column | `tbl --rename old_name=new_name` |
-| Cast to a new type | `tbl --cast col1=u64 col2=String` |
-| Add new columns | `tbl --with-columns name:String date:Date=2024-01-01` |
-| Drop columns | `tbl --drop col1 col2 col3` |
-| Filter rows | `tbl --filter col1=val1` <br> `tbl --filter col1!=val1` <br> `tbl --filter "col1>val1"` <br> `tbl --filter "col1<val1"`<br> `tbl --filter "col1>=val1"` <br> `tbl --filter "col1<=val1"` |
-| Sort rows | `tbl --sort col1 col2:desc` |
-| Select columns | `tbl --select col1 col2 col3` |
+| Rename a column | `tabl --rename old_name=new_name` |
+| Cast to a new type | `tabl --cast col1=u64 col2=String` |
+| Add new columns | `tabl --with-columns name:String date:Date=2024-01-01` |
+| Drop columns | `tabl --drop col1 col2 col3` |
+| Filter rows | `tabl --filter col1=val1` <br> `tabl --filter col1!=val1` <br> `tabl --filter "col1>val1"` <br> `tabl --filter "col1<val1"`<br> `tabl --filter "col1>=val1"` <br> `tabl --filter "col1<=val1"` |
+| Sort rows | `tabl --sort col1 col2:desc` |
+| Select columns | `tabl --select col1 col2 col3` |
 
-See full list of transformation operations [below](#tbl).
+See full list of transformation operations [below](#tabl).
 
 ### Selecting output mode
 
-`tbl` can output its results in many different modes:
+`tabl` can output its results in many different modes:
 
 | output mode | description | command |
 | --- | --- | --- |
-| Single File | output all results to single file | `tbl --output-file /path/to/file.parquet` |
-| Inplace | modify each file inplace | `tbl --inplace` |
-| New Directory | create equivalent files in a new directory | `tbl --output-dir /path/to/dir` |
-| Interactive | load dataframe in interactive python session | `tbl --df` |
-| Stdout | output data to stdout | `tbl` (default behavior) |
+| Single File | output all results to single file | `tabl --output-file /path/to/file.parquet` |
+| Inplace | modify each file inplace | `tabl --inplace` |
+| New Directory | create equivalent files in a new directory | `tabl --output-dir /path/to/dir` |
+| Interactive | load dataframe in interactive python session | `tabl --df` |
+| Stdout | output data to stdout | `tabl` (default behavior) |
 
-See full list of output options [below](#tbl).
+See full list of output options [below](#tabl).
 
 ## API Reference
 
-#### `tbl`
-##### Output of `tbl -h`:
+#### `tabl`
+##### Output of `tabl -h`:
 
 ```markdown
-tbl is a tool for reading and editing tabular data files
+tabl is a tool for reading and editing tabular data files
 
-Usage: tbl has two modes
-1. Summary mode: tbl [ls | schema] [SUMMARY_OPTIONS]
-2. Data mode:    tbl [DATA_OPTIONS]
+Usage: tabl has two modes
+1. Summary mode: tabl [ls | schema] [SUMMARY_OPTIONS]
+2. Data mode:    tabl [DATA_OPTIONS]
 
-Get help with SUMMARY_OPTIONS using tbl [ls | schema] -h
+Get help with SUMMARY_OPTIONS using tabl [ls | schema] -h
 
 Data mode is the default mode. DATA_OPTIONS are documented below
 
@@ -210,13 +210,13 @@ Output Modes:
 5. output data to stdout           (default behavior)
 ```
 
-#### `tbl ls`
-##### Output of `tbl ls -h`:
+#### `tabl ls`
+##### Output of `tabl ls -h`:
 
 ```markdown
 Display list of tabular files, similar to the cli `ls` command
 
-Usage: tbl ls [OPTIONS] [PATHS]...
+Usage: tabl ls [OPTIONS] [PATHS]...
 
 Arguments:
   [PATHS]...  input path(s) to use
@@ -231,13 +231,13 @@ General Options:
   -h, --help  display help message
 ```
 
-#### `tbl schema`
-##### Output of `tbl schema -h`:
+#### `tabl schema`
+##### Output of `tabl schema -h`:
 
 ```markdown
 Display table representation of each schema in the selected files
 
-Usage: tbl schema [OPTIONS] [PATHS]...
+Usage: tabl schema [OPTIONS] [PATHS]...
 
 Arguments:
   [PATHS]...  input path(s) to use
@@ -264,19 +264,19 @@ General Options:
 
 The most common tools are [`duckdb`](https://duckdb.org/docs/api/cli/overview), [`pqrs`](https://github.com/manojkarthick/pqrs), and [`parquet-cli`](https://github.com/apache/parquet-java/blob/master/parquet-cli/README.md).
 
-### Why use `tbl` when `duckdb` has a cli?
+### Why use `tabl` when `duckdb` has a cli?
 
-`duckdb` is an incredible tool. We recommend checking it out, especially when you're running complex workloads. However there are 3 reasons you might prefer `tbl` as a cli tool:
-1. **CLI-Native:** Compared to `duckdb`'s SQL, `tbl` has a cli-native syntax. This makes `tbl` simpler to use with fewer keystrokes:
-    1. `duckdb "DESCRIBE read_parquet('test.parquet')"` vs `tbl schema test.parquet` 
-    2. `duckdb "SELECT * FROM read_parquet('test.parquet')"` vs `tbl test.parquet`
-    3. `duckdb "SELECT * FROM read_parquet('test.parquet') ORDER BY co1"` vs `tbl test.parquet --sort col1`
-2. **High Level vs Low Level:** Sometimes SQL can also be a very low-level language. `tbl` and `polars` let you operate on a higher level of abstraction which reduces cognitive load:
+`duckdb` is an incredible tool. We recommend checking it out, especially when you're running complex workloads. However there are 3 reasons you might prefer `tabl` as a cli tool:
+1. **CLI-Native:** Compared to `duckdb`'s SQL, `tabl` has a cli-native syntax. This makes `tabl` simpler to use with fewer keystrokes:
+    1. `duckdb "DESCRIBE read_parquet('test.parquet')"` vs `tabl schema test.parquet`
+    2. `duckdb "SELECT * FROM read_parquet('test.parquet')"` vs `tabl test.parquet`
+    3. `duckdb "SELECT * FROM read_parquet('test.parquet') ORDER BY co1"` vs `tabl test.parquet --sort col1`
+    2. **High Level vs Low Level:** Sometimes SQL can also be a very low-level language. `tabl` and `polars` let you operate on a higher level of abstraction which reduces cognitive load:
     1. `duckdb`: `duckdb "SELECT col1, COUNT(col1) FROM read_parquet('test.parquet') GROUP BY col1"`
-    2. `tbl`: `tbl test.parquet --value-counts col1`
-3. **Operational QoL:** `tbl` is built specifically for making it easy to manage large parquet archives. Features like `--tree`, `--inplace`, and multi-schema commands make life easier for archive management.
+    2. `tabl`: `tabl test.parquet --value-counts col1`
+3. **Operational QoL:** `tabl` is built specifically for making it easy to manage large parquet archives. Features like `--tree`, `--inplace`, and multi-schema commands make life easier for archive management.
 
-### What is the plan for `tbl`?
+### What is the plan for `tabl`?
 
 There are a few features that we are currently exploring:
 1. **S3 and cloud buckets**: ability to read and write cloud bucket parquet files using the same operations that can be performed on local files
