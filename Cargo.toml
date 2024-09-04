@@ -1,18 +1,32 @@
 
 [workspace]
-members = ["crates/tbl-core", "crates/tbl-cli"]
+members = ["crates/tabl-core", "crates/tabl-cli"]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/paradigmxyz/tbl"
-repository = "https://github.com/paradigmxyz/tbl"
+homepage = "https://github.com/paradigmxyz/tabl"
+repository = "https://github.com/paradigmxyz/tabl"
 exclude = [".github/"]
 
 [workspace.dependencies]
 thiserror = "1.0"
 tokio = { version = "1.32.0", features = ["full"] }
 arrow = "52.0.0"
-polars = { version = "0.41.3", features = ["json", "parquet", "lazy", "csv", "dtype-u8", "dtype-u16", "dtype-decimal", "string_encoding", "binary_encoding", "concat_str", "strings", "streaming", "timezones"] }
+polars = { version = "0.41.3", features = [
+    "json",
+    "parquet",
+    "lazy",
+    "csv",
+    "dtype-u8",
+    "dtype-u16",
+    "dtype-decimal",
+    "string_encoding",
+    "binary_encoding",
+    "concat_str",
+    "strings",
+    "streaming",
+    "timezones",
+] }
