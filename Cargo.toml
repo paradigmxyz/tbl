@@ -15,4 +15,4 @@ exclude = [".github/"]
 thiserror = "1.0"
 tokio = { version = "1.32.0", features = ["full"] }
 arrow = "52.0.0"
-polars = { version = "0.41.3", features = ["json", "parquet", "lazy", "csv", "dtype-u8", "dtype-u16", "dtype-decimal", "string_encoding", "binary_encoding", "concat_str", "strings", "streaming", "timezones"] }
+polars = { version = "0.41.3", features = ["json", "parquet", "lazy", "csv", "dtype-u8", "dtype-u16", "dtype-decimal", "string_encoding", "binary_encoding", "concat_str", "replace", "strings", "streaming", "timezones"] }

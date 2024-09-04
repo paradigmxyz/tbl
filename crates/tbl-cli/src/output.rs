@@ -156,7 +156,20 @@ fn save_lf_to_disk(
         lf.sink_json(&tmp_path, options)?;
     } else {
         let options = ParquetWriteOptions::default();
-        lf.sink_parquet(&tmp_path, options)?;
+        let result = lf.clone().sink_parquet(&tmp_path, options);
+        if result.is_err() {
+            // sink_parquet() is still missing some options, so if it fails use backup
+            let file = std::fs::File::create(&tmp_path)?;
+            let writer = ParquetWriter::new(file)
+                .with_compression(ParquetCompression::Snappy)
+                .with_statistics(StatisticsOptions {
+                    min_value: true,
+                    max_value: true,
+                    distinct_count: true,
+                    null_count: true,
+                });
+            writer.finish(&mut lf.clone().collect()?)?;
+        }
     };
 
     // Move the temporary file to the final output path

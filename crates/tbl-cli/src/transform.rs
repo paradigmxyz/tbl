@@ -12,6 +12,7 @@ pub(crate) fn apply_transformations(
     let lf = apply_cast(lf, args.cast.as_deref())?;
     let lf = apply_set(lf, args.set.as_deref())?;
     let lf = apply_nullify(lf, args.nullify.as_deref())?;
+    let lf = apply_replace(lf, args.replace.as_deref())?;
     let lf = apply_select(lf, args.columns.as_deref())?;
     let lf = apply_offset(lf, args.offset)?;
     let lf = apply_head(lf, args.head)?;
@@ -161,23 +162,17 @@ fn apply_single_filter(
 ) -> Result<LazyFrame, TblCliError> {
     if filter.contains("!=") {
         apply_comparison_filter(lf, filter, schema, "!=")
-    }
-    else if filter.contains(">=") {
+    } else if filter.contains(">=") {
         apply_comparison_filter(lf, filter, schema, ">=")
-    }
-    else if filter.contains("<=") {
+    } else if filter.contains("<=") {
         apply_comparison_filter(lf, filter, schema, "<=")
-    }
-    else if filter.contains('=') {
+    } else if filter.contains('=') {
         apply_comparison_filter(lf, filter, schema, "=")
-    } 
-    else if filter.contains(">") {
+    } else if filter.contains(">") {
         apply_comparison_filter(lf, filter, schema, ">")
-    }
-    else if filter.contains("<") {
+    } else if filter.contains("<") {
         apply_comparison_filter(lf, filter, schema, "<")
-    }
-    else if filter.ends_with(".is_null") {
+    } else if filter.ends_with(".is_null") {
         apply_null_filter(lf, filter, schema, true)
     } else if filter.ends_with(".is_not_null") {
         apply_null_filter(lf, filter, schema, false)
@@ -205,7 +200,10 @@ fn apply_comparison_filter(
     } else if operator == "<=" {
         filter.split("<=").collect()
     } else {
-        return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
+        return Err(TblCliError::Error(format!(
+            "Invalid filter operator: {}",
+            operator
+        )));
     };
 
     if parts.len() != 2 {
@@ -235,7 +233,10 @@ fn apply_comparison_filter(
                 } else if operator == "<=" {
                     col(column).lt_eq(lit(binary_value))
                 } else {
-                    return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
+                    return Err(TblCliError::Error(format!(
+                        "Invalid filter operator: {}",
+                        operator
+                    )));
                 }
             } else {
                 return Err(TblCliError::Error(
@@ -257,7 +258,10 @@ fn apply_comparison_filter(
             } else if operator == "<=" {
                 col(column).lt_eq(lit(value))
             } else {
-                return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
+                return Err(TblCliError::Error(format!(
+                    "Invalid filter operator: {}",
+                    operator
+                )));
             }
         }
         DataType::UInt64 | DataType::Int64 | DataType::UInt32 | DataType::Int32 => {
@@ -282,7 +286,10 @@ fn apply_comparison_filter(
             } else if operator == "<=" {
                 col(column).lt_eq(lit(int_value))
             } else {
-                return Err(TblCliError::Error(format!("Invalid filter operator: {}", operator)));
+                return Err(TblCliError::Error(format!(
+                    "Invalid filter operator: {}",
+                    operator
+                )));
             }
         }
         _ => {
@@ -395,7 +402,7 @@ pub(crate) fn apply_set(lf: LazyFrame, set: Option<&[String]>) -> Result<LazyFra
                 println!("column_type: {:?}", column_type);
                 println!("column: {:?}", column);
 
-                let set_expr = create_set_expr(column, value, column_type)?;
+                let set_expr = raw_str_to_lit(column, value, column_type)?;
                 println!("set_expr: {:?}", set_expr);
                 new_lf = new_lf.with_column(set_expr.cast(column_type.clone()));
                 println!("done");
@@ -405,7 +412,7 @@ pub(crate) fn apply_set(lf: LazyFrame, set: Option<&[String]>) -> Result<LazyFra
     }
 }
 
-fn create_set_expr(column: &str, value: &str, dtype: &DataType) -> Result<Expr, TblCliError> {
+fn raw_str_to_lit(column: &str, value: &str, dtype: &DataType) -> Result<Expr, TblCliError> {
     let lit_value = match dtype {
         DataType::Int8 => lit(i8::from_str(value)
             .map_err(|_| TblCliError::Error(format!("Invalid i8 value: {}", value)))?),
@@ -493,6 +500,46 @@ pub(crate) fn apply_nullify(
                         .cast(column_type.clone())
                         .alias(column),
                 );
+            }
+            Ok(new_lf)
+        }
+    }
+}
+
+pub(crate) fn apply_replace(
+    lf: LazyFrame,
+    raw_values: Option<&[String]>,
+) -> Result<LazyFrame, TblCliError> {
+    match raw_values {
+        None => Ok(lf),
+        Some(values) => {
+            let mut new_lf = lf;
+            let schema = new_lf
+                .schema()
+                .map_err(|e| TblCliError::Error(e.to_string()))?;
+
+            for value in values.iter() {
+                // get column
+                let parts: Vec<&str> = value.split('.').collect();
+                if parts.len() != 2 {
+                    return Err(TblCliError::Error("Invalid format".to_string()));
+                }
+                let (column, before_after) = (parts[0], parts[1]);
+
+                // get old_value / new_value
+                let parts: Vec<&str> = before_after.split('=').collect();
+                if parts.len() != 2 {
+                    return Err(TblCliError::Error("Invalid format".to_string()));
+                }
+                let (old_value, new_value) = (parts[0], parts[1]);
+
+                let column_type = schema
+                    .get(column)
+                    .ok_or_else(|| TblCliError::Error(format!("Column '{}' not found", column)))?;
+
+                let old_expr = raw_str_to_lit(column, old_value, column_type)?;
+                let new_expr = raw_str_to_lit(column, new_value, column_type)?;
+                new_lf = new_lf.with_column(col(column).replace(old_expr, new_expr));
             }
             Ok(new_lf)
         }

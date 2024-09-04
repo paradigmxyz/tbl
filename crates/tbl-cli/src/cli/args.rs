@@ -278,6 +278,16 @@ pub(crate) struct DataArgs {
     )]
     pub(crate) nullify: Option<Vec<String>>,
 
+    /// replace values of a column
+    #[clap(
+        long,
+        help = cstr!("replace values, syntax <white><bold>COLUMN.OLD_VALUE=NEW_VALUE</bold></white>"),
+        help_heading = "Transform Options",
+        value_name="VALUE",
+        num_args(1..)
+    )]
+    pub(crate) replace: Option<Vec<String>>,
+
     /// filter rows by values, syntax COLUMN=VALUE
     #[clap(
         short,
