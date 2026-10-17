@@ -4,7 +4,6 @@ description = "tbl is a tool for reading and editing tabular data files"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-homepage.workspace = true
 repository.workspace = true
 
 [[bin]]
